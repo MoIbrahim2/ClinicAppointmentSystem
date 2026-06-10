@@ -88,31 +88,33 @@
                 {% csrf_token %}
                 
                 <div style="border: 1px solid var(--dash-border); border-radius: var(--dash-radius); overflow: hidden; box-shadow: var(--dash-shadow-soft);">
-                    <table class="schedule-table">
-                        <thead>
-                            <tr>
-                                <th>{% trans "Date" %}</th>
-                                <th>{% trans "Day of Week" %}</th>
-                                <th>{% trans "Start Time" %}</th>
-                                <th>{% trans "End Time" %}</th>
-                                <th>{% trans "Slot Duration (min)" %}</th>
-                                <th style="text-align: center;">{% trans "Delete" %}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {{ formset.management_form }}
-                            {% for form in formset %}
-                            <tr>
-                                <td>{{ form.schedule_date }}</td>
-                                <td>{% if form.instance.day_of_week is not None %}{{ form.instance.get_day_of_week_display }}{% else %}-{% endif %}</td>
-                                <td>{{ form.start_time }}</td>
-                                <td>{{ form.end_time }}</td>
-                                <td>{{ form.slot_duration_minutes }}</td>
-                                <td style="text-align: center;">{{ form.DELETE }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="schedule-table">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Date" %}</th>
+                                    <th>{% trans "Day of Week" %}</th>
+                                    <th>{% trans "Start Time" %}</th>
+                                    <th>{% trans "End Time" %}</th>
+                                    <th>{% trans "Slot Duration (min)" %}</th>
+                                    <th style="text-align: center;">{% trans "Delete" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {{ formset.management_form }}
+                                {% for form in formset %}
+                                <tr>
+                                    <td>{{ form.schedule_date }}</td>
+                                    <td>{% if form.instance.day_of_week is not None %}{{ form.instance.get_day_of_week_display }}{% else %}-{% endif %}</td>
+                                    <td>{{ form.start_time }}</td>
+                                    <td>{{ form.end_time }}</td>
+                                    <td>{{ form.slot_duration_minutes }}</td>
+                                    <td style="text-align: center;">{{ form.DELETE }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
                 <div class="form-actions">

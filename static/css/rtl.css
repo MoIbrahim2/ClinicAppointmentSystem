@@ -20,10 +20,12 @@
 
 @media (max-width: 991.98px) {
     [dir="rtl"] .dashboard-sidebar {
-        margin: 16px !important;
+        margin: 0 !important;
+        inset: 0 0 0 auto !important;
     }
     [dir="rtl"] .dashboard-main {
         margin-right: 0 !important;
+        margin-left: 0 !important;
     }
 }
 

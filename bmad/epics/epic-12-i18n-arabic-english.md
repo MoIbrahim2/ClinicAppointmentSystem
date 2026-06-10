@@ -7,7 +7,7 @@
 - **Depends On:** All other epics (do last — cross-cutting)
 - **Estimated Effort:** Very High
 - **Affected Apps:** ALL apps, ALL templates, settings
-- **Status:** `[ ] Not Started`
+- **Status:** `[x] Completed`
 
 ---
 
@@ -58,13 +58,13 @@ Implement full bilingual (Arabic + English) support with Django i18n, complete A
 
 ### Story 12.2: Mark All Template Strings for Translation
 - **ID:** EPIC-12-S2
-- **Status:** `[ ] Not Started`
+- **Status:** `[x] Completed`
 - **Depends On:** EPIC-12-S1
 
 #### Tasks
-- `[ ]` Add `{% load i18n %}` to every template
-- `[ ]` Wrap EVERY user-facing string in EVERY template with `{% trans "..." %}` or `{% blocktrans %}...{% endblocktrans %}`
-- `[ ]` Templates to process (complete list):
+- `[x]` Add `{% load i18n %}` to every template
+- `[x]` Wrap EVERY user-facing string in EVERY template with `{% trans "..." %}` or `{% blocktrans %}...{% endblocktrans %}`
+- `[x]` Templates to process (complete list):
   - `templates/base.html`
   - `templates/base_auth.html`
   - `templates/home.html`
@@ -83,9 +83,9 @@ Implement full bilingual (Arabic + English) support with Django i18n, complete A
   - Any new templates from other epics
 
 #### Acceptance Criteria
-- [ ] Every user-facing string wrapped with translation tag
-- [ ] No hardcoded English strings remain in templates
-- [ ] `{% load i18n %}` in every template file
+- [x] Every user-facing string wrapped with translation tag
+- [x] No hardcoded English strings remain in templates
+- [x] `{% load i18n %}` in every template file
 
 #### Files to Modify
 - ALL `.html` template files (30+ files)
@@ -94,19 +94,19 @@ Implement full bilingual (Arabic + English) support with Django i18n, complete A
 
 ### Story 12.3: Mark All Python Strings for Translation
 - **ID:** EPIC-12-S3
-- **Status:** `[ ] Not Started`
+- **Status:** `[x] Completed`
 - **Depends On:** EPIC-12-S1
 
 #### Tasks
-- `[ ]` Import `gettext_lazy as _` in all models, forms, views files
-- `[ ]` Wrap all user-facing strings:
+- `[x]` Import `gettext_lazy as _` in all models, forms, views files
+- `[x]` Wrap all user-facing strings:
   - Model field `verbose_name` values
   - Model `TextChoices` display strings
   - Form field labels and error messages
   - `messages.success()` / `messages.error()` strings
   - View context strings (dashboard_title, dashboard_subtitle)
   - ValidationError messages
-- `[ ]` Files to process:
+- `[x]` Files to process:
   - `accounts/models.py`, `accounts/forms.py`, `accounts/views.py`
   - `appointments/models.py`, `appointments/views.py`, `appointments/services.py`
   - `emr/models.py`, `emr/forms.py`, `emr/views.py`
@@ -117,10 +117,10 @@ Implement full bilingual (Arabic + English) support with Django i18n, complete A
   - `dashboard/views.py`
 
 #### Acceptance Criteria
-- [ ] All user-facing Python strings wrapped with `_()`
-- [ ] Model choice labels translated
-- [ ] Flash messages translated
-- [ ] Error messages translated
+- [x] All user-facing Python strings wrapped with `_()`
+- [x] Model choice labels translated
+- [x] Flash messages translated
+- [x] Error messages translated
 
 #### Files to Modify
 - ALL Python files with user-facing strings (15+ files)
@@ -129,20 +129,20 @@ Implement full bilingual (Arabic + English) support with Django i18n, complete A
 
 ### Story 12.4: Generate Arabic Translation File
 - **ID:** EPIC-12-S4
-- **Status:** `[ ] Not Started`
+- **Status:** `[x] Completed`
 - **Depends On:** EPIC-12-S2, EPIC-12-S3
 
 #### Tasks
-- `[ ]` Run `python manage.py makemessages -l ar --no-location`
-- `[ ]` Translate EVERY entry in `locale/ar/LC_MESSAGES/django.po`
-- `[ ]` Run `python manage.py compilemessages`
-- `[ ]` Test by switching language to Arabic
+- `[x]` Run `python manage.py makemessages -l ar --no-location`
+- `[x]` Translate EVERY entry in `locale/ar/LC_MESSAGES/django.po`
+- `[x]` Run `python manage.py compilemessages`
+- `[x]` Test by switching language to Arabic
 
 #### Acceptance Criteria
-- [ ] All strings have Arabic translations
-- [ ] No untranslated `msgstr ""` entries remain
-- [ ] Compiled `.mo` file generated
-- [ ] UI displays correctly in Arabic
+- [x] All strings have Arabic translations
+- [x] No untranslated `msgstr ""` entries remain
+- [x] Compiled `.mo` file generated
+- [x] UI displays correctly in Arabic
 
 #### Files to Create
 - `locale/ar/LC_MESSAGES/django.po`
@@ -152,31 +152,31 @@ Implement full bilingual (Arabic + English) support with Django i18n, complete A
 
 ### Story 12.5: RTL CSS Support
 - **ID:** EPIC-12-S5
-- **Status:** `[ ] Not Started`
+- **Status:** `[x] Completed`
 - **Depends On:** EPIC-12-S1
 
 #### Tasks
-- `[ ]` Create `static/css/rtl.css` with RTL overrides:
+- `[x]` Create `static/css/rtl.css` with RTL overrides:
   - Text alignment: `text-align: right`
   - Flex direction reversal where needed
   - Margin/padding mirror (left ↔ right)
   - Sidebar on right side
   - Form label alignment
   - Table header alignment
-- `[ ]` Modify `templates/base.html` and `templates/base_auth.html`:
+- `[x]` Modify `templates/base.html` and `templates/base_auth.html`:
   ```html
   {% load i18n %}
   {% get_current_language_bidi as LANGUAGE_BIDI %}
   <html lang="{% get_current_language %}" dir="{% if LANGUAGE_BIDI %}rtl{% else %}ltr{% endif %}">
   ```
   - Conditionally include `rtl.css`: `{% if LANGUAGE_BIDI %}<link href="{% static 'css/rtl.css' %}">{% endif %}`
-- `[ ]` Test all pages in RTL mode
+- `[x]` Test all pages in RTL mode
 
 #### Acceptance Criteria
-- [ ] Layout correctly mirrors in RTL mode
-- [ ] Sidebar on right side when Arabic
-- [ ] Forms, tables, and cards properly aligned
-- [ ] No visual overlaps or broken layouts
+- [x] Layout correctly mirrors in RTL mode
+- [x] Sidebar on right side when Arabic
+- [x] Forms, tables, and cards properly aligned
+- [x] No visual overlaps or broken layouts
 
 #### Files to Create
 - `static/css/rtl.css`
@@ -188,11 +188,11 @@ Implement full bilingual (Arabic + English) support with Django i18n, complete A
 
 ### Story 12.6: Language Switcher UI
 - **ID:** EPIC-12-S6
-- **Status:** `[ ] Not Started`
+- **Status:** `[x] Completed`
 - **Depends On:** EPIC-12-S1
 
 #### Tasks
-- `[ ]` Add language switcher to navbar/topbar:
+- `[x]` Add language switcher to navbar/topbar:
   - Dropdown or toggle button: "EN" / "عربي"
   - Uses Django's `set_language` view via form POST
   ```html
@@ -209,13 +209,13 @@ Implement full bilingual (Arabic + English) support with Django i18n, complete A
       </select>
   </form>
   ```
-- `[ ]` Add to both `base.html` (public pages) and dashboard topbar/sidebar
-- `[ ]` Style the switcher to match the UI
+- `[x]` Add to both `base.html` (public pages) and dashboard topbar/sidebar
+- `[x]` Style the switcher to match the UI
 
 #### Acceptance Criteria
-- [ ] Language switcher visible on all pages
-- [ ] Switching language reloads page in selected language
-- [ ] Language preference persisted in session
+- [x] Language switcher visible on all pages
+- [x] Switching language reloads page in selected language
+- [x] Language preference persisted in session
 
 #### Files to Modify
 - `templates/base.html`, `templates/base_auth.html`
@@ -224,12 +224,12 @@ Implement full bilingual (Arabic + English) support with Django i18n, complete A
 ---
 
 ## Definition of Done
-- [ ] All 6 stories completed
-- [ ] Every string translated to Arabic
-- [ ] RTL layout correct on all pages
-- [ ] Language switcher functional
-- [ ] No hardcoded English strings remain
-- [ ] Existing tests pass (may need updates for translated strings)
+- [x] All 6 stories completed
+- [x] Every string translated to Arabic
+- [x] RTL layout correct on all pages
+- [x] Language switcher functional
+- [x] No hardcoded English strings remain
+- [x] Existing tests pass (may need updates for translated strings)
 
 ---
 

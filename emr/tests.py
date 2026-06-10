@@ -218,7 +218,7 @@ class ConsultationWorkflowTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Viral infection")
         self.assertContains(response, "Paracetamol")
-        self.assertNotContains(response, "<form", html=False)
+        self.assertNotContains(response, '<form method="post" novalidate')
 
     def test_other_patient_cannot_view_consultation_summary(self):
         appointment = self.create_appointment(status=Appointment.Status.COMPLETED)

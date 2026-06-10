@@ -56,6 +56,23 @@
         text-decoration: none; color: #475569; transition: all 150ms ease;
     }
     .report-badge:hover { background: var(--role-primary); color: #fff; border-color: var(--role-primary); }
+    .patient-info-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 24px;
+    }
+    .consultation-details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+    @media (max-width: 767.98px) {
+        .patient-info-grid,
+        .consultation-details-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+    }
     </style>
 {% endblock %}
 
@@ -76,7 +93,7 @@
 
             <!-- Patient Info Card -->
             <div class="patient-header-card">
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-bottom: 20px;">
+                <div class="patient-info-grid" style="margin-bottom: 20px;">
                     <div>
                         <span style="font-size: 0.85rem; color: var(--dash-muted); display: block; font-weight: 700; margin-bottom: 4px;">{% trans "PATIENT NAME" %}</span>
                         <strong style="font-size: 1.1rem; color: var(--dash-text);">{{ patient.get_full_name|default:patient.username }}</strong>
@@ -90,7 +107,7 @@
                         <strong style="font-size: 1.1rem; color: var(--dash-text);">{{ patient_profile.blood_type|default:"N/A" }}</strong>
                     </div>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+                <div class="patient-info-grid">
                     <div>
                         <span style="font-size: 0.85rem; color: var(--dash-muted); display: block; font-weight: 700; margin-bottom: 4px;">{% trans "GENDER" %}</span>
                         <strong style="font-size: 1.1rem; color: var(--dash-text);">{{ patient_profile.get_gender_display|default:"N/A" }}</strong>
@@ -154,7 +171,7 @@
                                 </div>
                                 <div class="visit-body">
                                     <!-- Diagnosis and Notes -->
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px;">
+                                    <div class="consultation-details-grid" style="margin-bottom: 20px;">
                                         <div class="visit-section">
                                             <h4>{% trans "Symptoms / Chief Complaint" %}</h4>
                                             <p style="margin: 0; color: #475569; font-size: 0.95rem; white-space: pre-line;">{{ consultation.symptoms_notes }}</p>
@@ -167,7 +184,7 @@
 
                                     <!-- Lab and Test Results -->
                                     {% if consultation.lab_results or consultation.test_results %}
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 20px; border-top: 1px solid var(--dash-border); padding-top: 16px;">
+                                    <div class="consultation-details-grid" style="margin-bottom: 20px; border-top: 1px solid var(--dash-border); padding-top: 16px;">
                                         {% if consultation.lab_results %}
                                         <div class="visit-section">
                                             <h4>{% trans "Lab Results" %}</h4>
@@ -187,24 +204,26 @@
                                     {% if consultation.prescriptions.exists %}
                                     <div class="visit-section" style="border-top: 1px solid var(--dash-border); padding-top: 16px;">
                                         <h4>{% trans "Prescriptions" %}</h4>
-                                        <table style="width: 100%; border-collapse: collapse; margin-top: 8px;">
-                                            <thead>
-                                                <tr style="background: #f8fafc; border-bottom: 1px solid var(--dash-border);">
-                                                    <th style="padding: 10px 14px; text-align: left; font-size: 0.85rem; font-weight: 800; color: #475569;">{% trans "Medication" %}</th>
-                                                    <th style="padding: 10px 14px; text-align: left; font-size: 0.85rem; font-weight: 800; color: #475569;">{% trans "Dosage" %}</th>
-                                                    <th style="padding: 10px 14px; text-align: left; font-size: 0.85rem; font-weight: 800; color: #475569;">{% trans "Duration" %}</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {% for rx in consultation.prescriptions.all %}
-                                                <tr style="border-bottom: 1px solid var(--dash-border);">
-                                                    <td style="padding: 10px 14px; font-weight: 700; color: var(--dash-text); font-size: 0.9rem;">{{ rx.medication_name }}</td>
-                                                    <td style="padding: 10px 14px; color: #475569; font-size: 0.9rem;">{{ rx.dosage }}</td>
-                                                    <td style="padding: 10px 14px; color: #475569; font-size: 0.9rem;">{{ rx.duration }}</td>
-                                                </tr>
-                                                {% endfor %}
-                                            </tbody>
-                                        </table>
+                                        <div class="table-responsive">
+                                            <table style="width: 100%; border-collapse: collapse; margin-top: 8px;">
+                                                <thead>
+                                                    <tr style="background: #f8fafc; border-bottom: 1px solid var(--dash-border);">
+                                                        <th style="padding: 10px 14px; text-align: left; font-size: 0.85rem; font-weight: 800; color: #475569;">{% trans "Medication" %}</th>
+                                                        <th style="padding: 10px 14px; text-align: left; font-size: 0.85rem; font-weight: 800; color: #475569;">{% trans "Dosage" %}</th>
+                                                        <th style="padding: 10px 14px; text-align: left; font-size: 0.85rem; font-weight: 800; color: #475569;">{% trans "Duration" %}</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for rx in consultation.prescriptions.all %}
+                                                    <tr style="border-bottom: 1px solid var(--dash-border);">
+                                                        <td style="padding: 10px 14px; font-weight: 700; color: var(--dash-text); font-size: 0.9rem;">{{ rx.medication_name }}</td>
+                                                        <td style="padding: 10px 14px; color: #475569; font-size: 0.9rem;">{{ rx.dosage }}</td>
+                                                        <td style="padding: 10px 14px; color: #475569; font-size: 0.9rem;">{{ rx.duration }}</td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
                                     {% endif %}
 

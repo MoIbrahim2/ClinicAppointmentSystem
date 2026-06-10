@@ -128,7 +128,7 @@
 
                             {% if "walkin_" not in appt.patient.username and appt.status != 'CANCELLED' and appt.status != 'COMPLETED' %}
                                 <div class="modal fade" id="rescheduleModal-{{ appt.id }}" tabindex="-1" aria-hidden="true" data-doctor-id="{{ appt.slot.doctor.id }}">
-                                    <div class="modal-dialog modal-dialog-centered">
+                                    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
                                         <div class="modal-content border-0 shadow">
                                             <div class="modal-header border-bottom-0 pb-0">
                                                 <h5 class="modal-title fw-bold" style="color:#0f172a;">{% trans "Reschedule Appointment" %}</h5>
@@ -154,6 +154,7 @@
                                                         <label class="form-label" style="font-weight:800; font-size:0.8rem; color:#475569; margin-bottom:6px;">{% trans "Reason for Rescheduling" %}</label>
                                                         <textarea name="reason" class="walkin-input walkin-textarea" rows="2" placeholder="{% trans 'Reason for rescheduling' %}" required></textarea>
                                                     </div>
+                                                    <div class="mb-3 d-sm-none" style="height: 100px;"></div> <!-- visual spacing on mobile for keyboard -->
                                                 </div>
                                                 <div class="modal-footer border-top-0 pt-0">
                                                     <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
@@ -170,7 +171,7 @@
                     {% endif %}
                 </div>
             </article>
-
+ 
             <article class="panel-card">
                 <div class="panel-heading">
                     <div>
@@ -186,7 +187,7 @@
                 </div>
             </article>
         </div>
-
+ 
         <aside class="dashboard-stack">
             <article class="side-card">
                 <div class="side-heading">
@@ -217,17 +218,17 @@
                     </div>
                 </div>
             </article>
-
+ 
             <!-- Walk-in form removed from dashboard; use dedicated reception:walk_in page -->
-
+ 
         
         </aside>
     </section>
 </div>
-
+ 
 <!-- Reception Cancellation Modal -->
 <div class="modal fade" id="receptionCancelModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-fullscreen-sm-down">
         <div class="modal-content border-0 shadow">
             <div class="modal-header border-bottom-0 pb-0">
                 <h5 class="modal-title fw-bold" style="color:#0f172a;">{% trans "Confirm Cancellation" %}</h5>

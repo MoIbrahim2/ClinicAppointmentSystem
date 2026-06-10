@@ -1,11 +1,30 @@
 {% load i18n %}
-<aside class="dashboard-sidebar" aria-label="Dashboard navigation">
-    <div class="sidebar-brand">
-        <span class="sidebar-logo"><i class="bi bi-hospital"></i></span>
-        <div>
-            <div class="sidebar-kicker">{% trans "Clinic Workspace" %}</div>
-            <div class="sidebar-title">{% trans "CareFlow Clinic" %}</div>
+<!-- Mobile Top Bar -->
+<div class="mobile-top-bar d-lg-none">
+    <div class="d-flex align-items-center gap-3">
+        <button type="button" class="btn btn-light border p-2" id="sidebarToggle" aria-label="{% trans 'Toggle Sidebar' %}">
+            <i class="bi bi-list fs-4" style="line-height: 1; display: block;"></i>
+        </button>
+        <div class="d-flex align-items-center gap-2">
+            <span class="brand-mark-sm"><i class="bi bi-hospital"></i></span>
+            <span class="fw-bold">{% trans "CareFlow Clinic" %}</span>
         </div>
+    </div>
+</div>
+
+<!-- Backdrop Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<aside class="dashboard-sidebar" id="dashboardSidebar" aria-label="Dashboard navigation">
+    <div class="sidebar-brand d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center gap-2">
+            <span class="sidebar-logo"><i class="bi bi-hospital"></i></span>
+            <div>
+                <div class="sidebar-kicker">{% trans "Clinic Workspace" %}</div>
+                <div class="sidebar-title">{% trans "CareFlow Clinic" %}</div>
+            </div>
+        </div>
+        <button type="button" class="btn-close d-lg-none" id="sidebarClose" aria-label="{% trans 'Close Sidebar' %}"></button>
     </div>
 
     <div class="sidebar-user">
@@ -89,3 +108,41 @@
         </a>
     </div>
 </aside>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('sidebarToggle');
+        const closeBtn = document.getElementById('sidebarClose');
+        const sidebar = document.getElementById('dashboardSidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        if (toggleBtn && sidebar && overlay) {
+            function openSidebar() {
+                sidebar.classList.add('active');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeSidebar() {
+                sidebar.classList.remove('active');
+                overlay.classList.remove('active');
+                document.body.style.overflow = '';
+            }
+
+            toggleBtn.addEventListener('click', openSidebar);
+            if (closeBtn) {
+                closeBtn.addEventListener('click', closeSidebar);
+            }
+            overlay.addEventListener('click', closeSidebar);
+
+            const sidebarLinks = sidebar.querySelectorAll('.sidebar-link');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    if (window.innerWidth < 992) {
+                        closeSidebar();
+                    }
+                });
+            });
+        }
+    });
+</script>

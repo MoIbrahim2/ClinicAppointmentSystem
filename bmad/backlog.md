@@ -56,8 +56,8 @@
 
 | Epic | File | Priority | Effort | Status | Depends On |
 |---|---|---|---|---|---|
-| EPIC-12: i18n Arabic & English | [epic-12](epics/epic-12-i18n-arabic-english.md) | P2 | Very High | `[ ]` | ALL others |
-| EPIC-13: Responsive UI | [epic-13](epics/epic-13-responsive-ui.md) | P2 | Medium | `[ ]` | ALL others |
+| EPIC-12: i18n Arabic & English | [epic-12](epics/epic-12-i18n-arabic-english.md) | P2 | Very High | `[x]` | ALL others |
+| EPIC-13: Responsive UI | [epic-13](epics/epic-13-responsive-ui.md) | P2 | Medium | `[x]` | ALL others |
 
 ---
 
@@ -100,13 +100,13 @@ LAST (cross-cutting — must be done after all features are built):
 
 ## Global Definition of Done (All Epics)
 
-- [ ] All 13 epics marked as `[x]` completed
-- [ ] All migrations applied successfully
-- [ ] `python manage.py test` passes with no failures
-- [ ] RBAC enforced on all new endpoints
-- [ ] Full Arabic translation completed
-- [ ] Responsive layout verified on mobile (320px+)
-- [ ] Notification bell functional across all roles
-- [ ] Print-friendly views for prescriptions and invoices
-- [ ] Dynamic home page (no hardcoded data)
-- [ ] README updated with new features and setup instructions
+- [x] All 13 epics marked as `[x]` completed
+- [x] All migrations applied successfully
+- [x] `python manage.py test` passes with no failures
+- [x] RBAC enforced on all new endpoints
+- [x] Full Arabic translation completed
+- [x] Responsive layout verified on mobile (320px+)
+- [x] Notification bell functional across all roles
+- [x] Print-friendly views for prescriptions and invoices
+- [x] Dynamic home page (no hardcoded data)
+- [x] README updated with new features and setup instructions
