@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Dashboard | Clinic System{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Dashboard | Clinic System" %}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -912,8 +913,8 @@
                 {% include "dashboard/partials/_admin_dashboard.html" %}
             {% else %}
                 <section class="panel-card">
-                    <h1 class="panel-title">Dashboard unavailable</h1>
-                    <p class="panel-subtitle">Your account role does not have a dashboard assigned yet.</p>
+                    <h1 class="panel-title">{% trans "Dashboard unavailable" %}</h1>
+                    <p class="panel-subtitle">{% trans "Your account role does not have a dashboard assigned yet." %}</p>
                 </section>
             {% endif %}
         </div>

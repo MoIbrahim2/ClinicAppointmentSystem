@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Consultation Summary | Clinic System{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Consultation Summary | Clinic System" %}{% endblock %}
 
 {% block extra_css %}
 {% include "dashboard/partials/_dashboard_styles.html" %}
@@ -146,11 +147,11 @@
 
         <section class="summary-shell">
             <section class="summary-hero">
-                <span class="hero-badge"><i class="bi bi-file-earmark-medical"></i> Consultation Summary</span>
-                <h1>Review your visit summary.</h1>
-                <p>This page is read-only. It shows the diagnosis and prescriptions recorded during your consultation.</p>
+                <span class="hero-badge"><i class="bi bi-file-earmark-medical"></i> {% trans "Consultation Summary" %}</span>
+                <h1>{% trans "Review your visit summary." %}</h1>
+                <p>{% trans "This page is read-only. It shows the diagnosis and prescriptions recorded during your consultation." %}</p>
                 <div class="hero-meta">
-                    <span><i class="bi bi-person-badge me-1"></i>Dr. {{ consultation.doctor.get_full_name|default:consultation.doctor.username }}</span>
+                    <span><i class="bi bi-person-badge me-1"></i>{% trans "Dr." %} {{ consultation.doctor.get_full_name|default:consultation.doctor.username }}</span>
                     <span><i class="bi bi-calendar3 me-1"></i>{{ appointment.slot.date|date:"M j, Y" }}</span>
                     <span><i class="bi bi-clock me-1"></i>{{ appointment.slot.start_time|time:"H:i" }} - {{ appointment.slot.end_time|time:"H:i" }}</span>
                 </div>
@@ -159,16 +160,16 @@
             <div class="summary-grid">
                 <div class="summary-stack">
                     <section class="summary-card">
-                        <span class="section-kicker">Symptoms</span>
-                        <h2>Consultation notes</h2>
+                        <span class="section-kicker">{% trans "Symptoms" %}</span>
+                        <h2>{% trans "Consultation notes" %}</h2>
                         <div class="summary-text">
                             {{ consultation.symptoms_notes|default:"No symptoms notes were recorded for this consultation."|linebreaks }}
                         </div>
                     </section>
 
                     <section class="summary-card">
-                        <span class="section-kicker">Diagnosis</span>
-                        <h2>Doctor assessment</h2>
+                        <span class="section-kicker">{% trans "Diagnosis" %}</span>
+                        <h2>{% trans "Doctor assessment" %}</h2>
                         <div class="summary-text">
                             {{ consultation.diagnosis|default:"No diagnosis details were recorded for this consultation."|linebreaks }}
                         </div>
@@ -177,29 +178,29 @@
 
                 <aside class="summary-stack">
                     <section class="summary-card">
-                        <span class="section-kicker">Prescription</span>
-                        <h2>Medications</h2>
+                        <span class="section-kicker">{% trans "Prescription" %}</span>
+                        <h2>{% trans "Medications" %}</h2>
                         {% if consultation.prescriptions.all %}
                             <div class="prescription-list">
                                 {% for prescription in consultation.prescriptions.all %}
                                     <div class="prescription-item">
                                         <strong>{{ prescription.medication_name }}</strong>
                                         <div class="prescription-meta">
-                                            <span><i class="bi bi-capsule me-1"></i>Dosage: {{ prescription.dosage }}</span>
-                                            <span><i class="bi bi-hourglass-split me-1"></i>Duration: {{ prescription.duration }}</span>
+                                            <span><i class="bi bi-capsule me-1"></i>{% trans "Dosage:" %} {{ prescription.dosage }}</span>
+                                            <span><i class="bi bi-hourglass-split me-1"></i>{% trans "Duration:" %} {{ prescription.duration }}</span>
                                         </div>
                                     </div>
                                 {% endfor %}
                             </div>
                         {% else %}
-                            <p class="summary-note mb-0">No prescriptions were recorded for this consultation.</p>
+                            <p class="summary-note mb-0">{% trans "No prescriptions were recorded for this consultation." %}</p>
                         {% endif %}
                     </section>
 
                     <section class="summary-card">
-                        <span class="section-kicker">Access</span>
-                        <h2>Read-only record</h2>
-                        <p class="summary-note mb-0">Patients can review this summary but cannot edit the consultation record.</p>
+                        <span class="section-kicker">{% trans "Access" %}</span>
+                        <h2>{% trans "Read-only record" %}</h2>
+                        <p class="summary-note mb-0">{% trans "Patients can review this summary but cannot edit the consultation record." %}</p>
                     </section>
                 </aside>
             </div>

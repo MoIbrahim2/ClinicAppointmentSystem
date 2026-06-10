@@ -1,9 +1,10 @@
+{% load i18n %}
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Complete your profile | Clinic System</title>
+    <title>{% trans "Complete your profile | Clinic System" %}</title>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -112,11 +113,11 @@
     <main class="onboarding-shell">
         <div class="onboarding-card">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <span class="progress-pill"><i class="bi bi-check-circle-fill"></i>Step 1/1</span>
-                <span class="text-muted small">Patient profile</span>
+                <span class="progress-pill"><i class="bi bi-check-circle-fill"></i>{% trans "Step 1/1" %}</span>
+                <span class="text-muted small">{% trans "Patient profile" %}</span>
             </div>
-            <h1 class="mb-2">Complete your profile</h1>
-            <p class="subtitle mb-4">We use this to personalize your care and keep your records accurate.</p>
+            <h1 class="mb-2">{% trans "Complete your profile" %}</h1>
+            <p class="subtitle mb-4">{% trans "We use this to personalize your care and keep your records accurate." %}</p>
 
             <form method="post" novalidate>
                 {% csrf_token %}
@@ -124,7 +125,7 @@
                     <div class="alert alert-danger small">{{ form.non_field_errors }}</div>
                 {% endif %}
                 <div class="mb-3">
-                    <label class="form-label fw-semibold" for="{{ form.blood_type.id_for_label }}">Blood type</label>
+                    <label class="form-label fw-semibold" for="{{ form.blood_type.id_for_label }}">{% trans "Blood type" %}</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-droplet"></i></span>
                         {{ form.blood_type }}
@@ -134,14 +135,14 @@
                     {% endif %}
                 </div>
                 <div class="mb-4">
-                    <label class="form-label fw-semibold" for="{{ form.date_of_birth.id_for_label }}">Date of birth</label>
+                    <label class="form-label fw-semibold" for="{{ form.date_of_birth.id_for_label }}">{% trans "Date of birth" %}</label>
                     {{ form.date_of_birth }}
                     {% if form.date_of_birth.errors %}
                         <div class="text-danger small mt-1">{{ form.date_of_birth.errors|striptags }}</div>
                     {% endif %}
                 </div>
                 <button class="btn btn-primary w-100" type="submit">
-                    <i class="bi bi-arrow-right-circle me-2"></i>Continue
+                    <i class="bi bi-arrow-right-circle me-2"></i>{% trans "Continue" %}
                 </button>
             </form>
         </div>

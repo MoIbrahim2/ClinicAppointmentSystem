@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Walk-in Registration{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Walk-in Registration" %}{% endblock %}
 
 {% block extra_css %}
 {% include "dashboard/partials/_dashboard_styles.html" %}
@@ -49,29 +50,29 @@
                     {% csrf_token %}
                     <div class="form-card">
                         <div class="form-group">
-                            <label for="id_name">Full name</label>
+                            <label for="id_name">{% trans "Full name" %}</label>
                             {{ form.name }}
                             {% for error in form.name.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
                         </div>
                         <div class="form-group">
-                            <label for="id_phone_number">Phone number</label>
+                            <label for="id_phone_number">{% trans "Phone number" %}</label>
                             {{ form.phone_number }}
                             {% for error in form.phone_number.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
                         </div>
                         <div class="form-group">
-                            <label for="id_doctor">Doctor</label>
+                            <label for="id_doctor">{% trans "Doctor" %}</label>
                             {{ form.doctor }}
                             {% for error in form.doctor.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
                         </div>
                         <div class="form-group">
-                            <label for="id_notes">Notes (optional)</label>
+                            <label for="id_notes">{% trans "Notes (optional)" %}</label>
                             {{ form.notes }}
                             {% for error in form.notes.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
                         </div>
                         <div class="form-actions">
-                            <button type="submit" class="btn btn-primary"><i class="bi bi-person-plus"></i> Register
-                                Walk-in</button>
-                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary"><i class="bi bi-person-plus"></i> {% trans "Register
+                                Walk-in" %}</button>
+                            <a href="{% url 'dashboard' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
                         </div>
                     </div>
                 </form>

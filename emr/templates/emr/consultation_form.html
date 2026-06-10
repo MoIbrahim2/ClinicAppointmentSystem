@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Consultation | Doctor Portal{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Consultation | Doctor Portal" %}{% endblock %}
 
 {% block extra_css %}
     {% include "dashboard/partials/_dashboard_styles.html" %}
@@ -65,9 +66,9 @@
     <main class="dashboard-main">
         <div class="dashboard-content">
             <div style="margin-bottom: 34px;">
-                <h1 style="font-size: 2rem; font-weight: 950; margin: 0 0 8px; color: var(--dash-text);">Consultation</h1>
+                <h1 style="font-size: 2rem; font-weight: 950; margin: 0 0 8px; color: var(--dash-text);">{% trans "Consultation" %}</h1>
                 <p style="margin: 0; color: var(--dash-muted); font-size: 0.95rem;">
-                    {{ appointment.patient.get_full_name|default:appointment.patient.username }} — {{ appointment.slot.date|date:"M j, Y" }} at {{ appointment.slot.start_time|time:"H:i" }}
+                    {{ appointment.patient.get_full_name|default:appointment.patient.username }} — {{ appointment.slot.date|date:"M j, Y" }} {% trans "at" %} {{ appointment.slot.start_time|time:"H:i" }}
                 </p>
             </div>
 
@@ -76,18 +77,18 @@
 
                 <div class="form-card">
                     <div class="form-card-header">
-                        <h3>Clinical Notes</h3>
+                        <h3>{% trans "Clinical Notes" %}</h3>
                     </div>
                     <div class="form-card-body">
                         <div class="form-group">
-                            <label for="{{ form.symptoms_notes.id_for_label }}">Symptoms & Chief Complaint</label>
+                            <label for="{{ form.symptoms_notes.id_for_label }}">{% trans "Symptoms & Chief Complaint" %}</label>
                             {{ form.symptoms_notes }}
                             {% for error in form.symptoms_notes.errors %}
                                 <div class="form-error">{{ error }}</div>
                             {% endfor %}
                         </div>
                         <div class="form-group">
-                            <label for="{{ form.diagnosis.id_for_label }}">Diagnosis</label>
+                            <label for="{{ form.diagnosis.id_for_label }}">{% trans "Diagnosis" %}</label>
                             {{ form.diagnosis }}
                             {% for error in form.diagnosis.errors %}
                                 <div class="form-error">{{ error }}</div>
@@ -98,9 +99,9 @@
 
                 <div class="form-card">
                     <div class="form-card-header" style="display: flex; justify-content: space-between; align-items: center;">
-                        <h3 style="margin: 0;">Prescriptions</h3>
+                        <h3 style="margin: 0;">{% trans "Prescriptions" %}</h3>
                         <button type="button" id="add-prescription" class="btn btn-add btn-sm" style="margin: 0;">
-                            <i class="bi bi-plus"></i> Add Medication
+                            <i class="bi bi-plus"></i> {% trans "Add Medication" %}
                         </button>
                     </div>
                     <div class="form-card-body">
@@ -113,20 +114,20 @@
                             <div class="formset-row" style="display: grid; grid-template-columns: 1fr 0.8fr 0.8fr auto; gap: 12px;">
                                 {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
                                 <div>
-                                    <input type="text" name="{{ form.medication_name.html_name }}" id="{{ form.medication_name.id_for_label }}" placeholder="Medication name" value="{{ form.medication_name.value|default:'' }}" style="padding: 10px 12px; border: 1px solid var(--dash-border); border-radius: 10px;">
+                                    <input type="text" name="{{ form.medication_name.html_name }}" id="{{ form.medication_name.id_for_label }}" placeholder="{% trans 'Medication name' %}" value="{{ form.medication_name.value|default:'' }}" style="padding: 10px 12px; border: 1px solid var(--dash-border); border-radius: 10px;">
                                     {% for error in form.medication_name.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
                                 </div>
                                 <div>
-                                    <input type="text" name="{{ form.dosage.html_name }}" id="{{ form.dosage.id_for_label }}" placeholder="Dosage" value="{{ form.dosage.value|default:'' }}" style="padding: 10px 12px; border: 1px solid var(--dash-border); border-radius: 10px;">
+                                    <input type="text" name="{{ form.dosage.html_name }}" id="{{ form.dosage.id_for_label }}" placeholder="{% trans 'Dosage' %}" value="{{ form.dosage.value|default:'' }}" style="padding: 10px 12px; border: 1px solid var(--dash-border); border-radius: 10px;">
                                     {% for error in form.dosage.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
                                 </div>
                                 <div>
-                                    <input type="text" name="{{ form.duration.html_name }}" id="{{ form.duration.id_for_label }}" placeholder="Duration" value="{{ form.duration.value|default:'' }}" style="padding: 10px 12px; border: 1px solid var(--dash-border); border-radius: 10px;">
+                                    <input type="text" name="{{ form.duration.html_name }}" id="{{ form.duration.id_for_label }}" placeholder="{% trans 'Duration' %}" value="{{ form.duration.value|default:'' }}" style="padding: 10px 12px; border: 1px solid var(--dash-border); border-radius: 10px;">
                                     {% for error in form.duration.errors %}<div class="form-error">{{ error }}</div>{% endfor %}
                                 </div>
                                 <label style="margin: 0;">
                                     {{ form.DELETE }}
-                                    <span style="margin-left: 6px; font-size: 0.75rem; color: var(--dash-muted);">Delete</span>
+                                    <span style="margin-left: 6px; font-size: 0.75rem; color: var(--dash-muted);">{% trans "Delete" %}</span>
                                 </label>
                             </div>
                             {% endfor %}
@@ -135,8 +136,8 @@
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Save Consultation</button>
-                    <a href="{% url 'emr:daily-queue' %}" class="btn btn-secondary">Cancel</a>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> {% trans "Save Consultation" %}</button>
+                    <a href="{% url 'emr:daily-queue' %}" class="btn btn-secondary">{% trans "Cancel" %}</a>
                 </div>
             </form>
         </div>

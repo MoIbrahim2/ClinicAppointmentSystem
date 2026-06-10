@@ -86,9 +86,21 @@ class DoctorProfileForm(forms.ModelForm):
 class PatientProfileForm(forms.ModelForm):
     class Meta:
         model = PatientProfile
-        fields = ["date_of_birth", "blood_type"]
+        fields = [
+            "date_of_birth",
+            "blood_type",
+            "gender",
+            "allergies",
+            "medical_history",
+            "address",
+            "emergency_contact_name",
+            "emergency_contact_phone",
+        ]
         widgets = {
             "date_of_birth": forms.DateInput(attrs={"type": "date"}),
+            "allergies": forms.Textarea(attrs={"rows": 3}),
+            "medical_history": forms.Textarea(attrs={"rows": 4}),
+            "address": forms.Textarea(attrs={"rows": 3}),
         }
 
 
@@ -133,4 +145,21 @@ class PatientOnboardingForm(forms.ModelForm):
 
     class Meta:
         model = PatientProfile
-        fields = ["blood_type", "date_of_birth"]
+        fields = [
+            "blood_type",
+            "date_of_birth",
+            "gender",
+            "allergies",
+            "medical_history",
+            "address",
+            "emergency_contact_name",
+            "emergency_contact_phone",
+        ]
+        widgets = {
+            "gender": forms.Select(attrs={"class": "form-select"}),
+            "allergies": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "medical_history": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
+            "address": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "emergency_contact_name": forms.TextInput(attrs={"class": "form-control"}),
+            "emergency_contact_phone": forms.TextInput(attrs={"class": "form-control"}),
+        }

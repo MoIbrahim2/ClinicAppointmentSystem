@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from datetime import timedelta
 
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -9,13 +10,15 @@ from django.utils import timezone
 from django.views.generic import ListView, View
 
 from appointments.models import Appointment, DoctorSchedule
-from .models import Consultation
-from .forms import ConsultationForm, PrescriptionFormSet, DoctorScheduleFormSet
+from .models import Consultation, Prescription
+from .forms import ConsultationForm, PrescriptionFormSet, DoctorScheduleFormSet, MedicalReportFormSet
 
 
 class DoctorRequiredMixin(LoginRequiredMixin):
     """Check that user is a doctor."""
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
         if request.user.role != "DOCTOR":
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
@@ -23,6 +26,8 @@ class DoctorRequiredMixin(LoginRequiredMixin):
 
 class PatientRequiredMixin(LoginRequiredMixin):
     def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
         if request.user.role != "PATIENT":
             raise PermissionDenied
         return super().dispatch(request, *args, **kwargs)
@@ -99,11 +104,13 @@ class ConsultationCreateView(DoctorRequiredMixin, View):
         consultation = self.get_consultation(appointment)
         form = ConsultationForm(instance=consultation)
         formset = PrescriptionFormSet(instance=consultation)
+        report_formset = MedicalReportFormSet(instance=consultation, prefix="reports")
 
         return render(request, self.template_name, {
             "appointment": appointment,
             "form": form,
             "formset": formset,
+            "report_formset": report_formset,
             "current_section": "consultations",
         })
 
@@ -112,19 +119,21 @@ class ConsultationCreateView(DoctorRequiredMixin, View):
         consultation = self.get_consultation(appointment)
         form = ConsultationForm(request.POST, instance=consultation)
         formset = PrescriptionFormSet(request.POST, instance=consultation)
+        report_formset = MedicalReportFormSet(request.POST, request.FILES, instance=consultation, prefix="reports")
 
-        if form.is_valid() and formset.is_valid():
-            return self.save_consultation(appointment, form, formset)
+        if form.is_valid() and formset.is_valid() and report_formset.is_valid():
+            return self.save_consultation(appointment, form, formset, report_formset)
 
         return render(request, self.template_name, {
             "appointment": appointment,
             "form": form,
             "formset": formset,
+            "report_formset": report_formset,
             "current_section": "consultations",
         })
 
     @transaction.atomic
-    def save_consultation(self, appointment, form, formset):
+    def save_consultation(self, appointment, form, formset, report_formset):
         consultation = form.save(commit=False)
         consultation.appointment = appointment
         consultation.doctor = self.request.user
@@ -133,6 +142,9 @@ class ConsultationCreateView(DoctorRequiredMixin, View):
 
         formset.instance = consultation
         formset.save()
+
+        report_formset.instance = consultation
+        report_formset.save()
 
         appointment.status = Appointment.Status.COMPLETED
         appointment.save(update_fields=["status"])
@@ -168,7 +180,7 @@ class ManageScheduleView(DoctorRequiredMixin, View):
             for obj in formset.deleted_objects:
                 obj.delete()
 
-            messages.success(request, "Schedule updated.")
+            messages.success(request, _("Schedule updated."))
             return redirect("emr:manage-schedule")
 
         return render(request, self.template_name, {
@@ -185,13 +197,25 @@ class ConsultationListView(DoctorRequiredMixin, ListView):
     paginate_by = 20
 
     def get_queryset(self):
-        return Consultation.objects.filter(
+        queryset = Consultation.objects.filter(
             doctor=self.request.user
         ).select_related("patient", "appointment__slot").order_by("-id")
+        
+        q = self.request.GET.get("q", "").strip()
+        if q:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(patient__username__icontains=q) |
+                Q(patient__first_name__icontains=q) |
+                Q(patient__last_name__icontains=q) |
+                Q(patient__email__icontains=q)
+            )
+        return queryset
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["current_section"] = "consultations"
+        context["q"] = self.request.GET.get("q", "").strip()
         return context
 
 
@@ -216,3 +240,79 @@ class PatientConsultationSummaryView(PatientRequiredMixin, View):
             "dashboard_title": "Consultation Summary",
             "dashboard_subtitle": "Review the diagnosis and prescriptions from your completed visit.",
         })
+
+
+class PatientMedicalHistoryView(DoctorRequiredMixin, View):
+    template_name = "emr/patient_medical_history.html"
+
+    def get(self, request, *args, **kwargs):
+        from accounts.models import CustomUser
+        patient = get_object_or_404(CustomUser, id=kwargs["patient_id"], role=CustomUser.Role.PATIENT)
+        consultations = Consultation.objects.filter(patient=patient).select_related(
+            "appointment__slot", "doctor"
+        ).prefetch_related(
+            "prescriptions", "reports"
+        ).order_by("-appointment__slot__date", "-appointment__slot__start_time")
+
+        patient_profile = getattr(patient, "patient_profile", None)
+
+        return render(request, self.template_name, {
+            "patient": patient,
+            "patient_profile": patient_profile,
+            "consultations": consultations,
+            "current_section": "consultations",
+        })
+
+
+class PatientPrescriptionsListView(PatientRequiredMixin, ListView):
+    template_name = "emr/patient_prescriptions.html"
+    context_object_name = "prescriptions"
+    paginate_by = 20
+
+    def get_queryset(self):
+        return Prescription.objects.filter(
+            consultation__patient=self.request.user
+        ).select_related(
+            'consultation__appointment__slot',
+            'consultation__doctor'
+        ).order_by('-consultation__appointment__slot__date')
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["current_section"] = "prescriptions"
+        return context
+
+
+class PrescriptionPrintView(LoginRequiredMixin, View):
+    def get(self, request, consultation_id, *args, **kwargs):
+        consultation = get_object_or_404(
+            Consultation.objects.select_related("appointment__slot", "doctor", "patient"),
+            id=consultation_id
+        )
+        
+        # Accessible by the doctor who created it, or the patient whose prescription it is
+        if request.user != consultation.doctor and request.user != consultation.patient:
+            raise PermissionDenied
+            
+        patient_profile = getattr(consultation.patient, "patient_profile", None)
+        
+        # Calculate age if date_of_birth exists
+        age = None
+        if patient_profile and patient_profile.date_of_birth:
+            import datetime
+            today = datetime.date.today()
+            dob = patient_profile.date_of_birth
+            age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+            
+        from clinic.models import ClinicSettings
+        clinic_settings = ClinicSettings.get_settings()
+        
+        return render(request, "emr/prescription_print.html", {
+            "consultation": consultation,
+            "prescriptions": consultation.prescriptions.all(),
+            "patient_profile": patient_profile,
+            "age": age,
+            "clinic_settings": clinic_settings,
+        })
+
+

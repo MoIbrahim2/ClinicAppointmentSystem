@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Consultations | Doctor Portal{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Consultations | Doctor Portal" %}{% endblock %}
 
 {% block extra_css %}
     {% include "dashboard/partials/_dashboard_styles.html" %}
@@ -50,8 +51,8 @@
     <main class="dashboard-main">
         <div class="dashboard-content">
             <div style="margin-bottom: 34px;">
-                <h1 style="font-size: 2rem; font-weight: 950; margin: 0 0 8px; color: var(--dash-text);">Consultations</h1>
-                <p style="margin: 0; color: var(--dash-muted); font-size: 0.95rem;">All your consultation notes and patient records</p>
+                <h1 style="font-size: 2rem; font-weight: 950; margin: 0 0 8px; color: var(--dash-text);">{% trans "Consultations" %}</h1>
+                <p style="margin: 0; color: var(--dash-muted); font-size: 0.95rem;">{% trans "All your consultation notes and patient records" %}</p>
             </div>
 
             {% if consultations %}
@@ -63,7 +64,7 @@
                                 {{ consultation.patient.get_full_name|default:consultation.patient.username }}
                             </div>
                             <div class="consultation-date">
-                                {{ consultation.appointment.slot.date|date:"M j, Y" }} at 
+                                {{ consultation.appointment.slot.date|date:"M j, Y" }} {% trans "at" %} 
                                 {{ consultation.appointment.slot.start_time|time:"H:i" }}
                             </div>
                         </div>
@@ -72,30 +73,30 @@
                     <div class="consultation-body">
                         <div class="consultation-notes">
                             <div class="note-section">
-                                <h4>Symptoms & Notes</h4>
+                                <h4>{% trans "Symptoms & Notes" %}</h4>
                                 <p>{{ consultation.symptoms_notes|linebreaks }}</p>
                             </div>
                             <div class="note-section">
-                                <h4>Diagnosis</h4>
+                                <h4>{% trans "Diagnosis" %}</h4>
                                 <p>{{ consultation.diagnosis|linebreaks }}</p>
                             </div>
                         </div>
 
                         {% if consultation.prescriptions.all %}
                         <div class="prescription-list">
-                            <h4 style="margin: 16px 0 10px; font-size: 0.9rem; font-weight: 900; color: #334155;">Prescriptions</h4>
+                            <h4 style="margin: 16px 0 10px; font-size: 0.9rem; font-weight: 900; color: #334155;">{% trans "Prescriptions" %}</h4>
                             {% for prescription in consultation.prescriptions.all %}
                             <div class="prescription-item">
                                 <div>
-                                    <div class="prescription-label">Medication</div>
+                                    <div class="prescription-label">{% trans "Medication" %}</div>
                                     <div class="prescription-value">{{ prescription.medication_name }}</div>
                                 </div>
                                 <div>
-                                    <div class="prescription-label">Dosage</div>
+                                    <div class="prescription-label">{% trans "Dosage" %}</div>
                                     <div class="prescription-value">{{ prescription.dosage }}</div>
                                 </div>
                                 <div>
-                                    <div class="prescription-label">Duration</div>
+                                    <div class="prescription-label">{% trans "Duration" %}</div>
                                     <div class="prescription-value">{{ prescription.duration }}</div>
                                 </div>
                             </div>
@@ -109,22 +110,22 @@
                 {% if is_paginated %}
                 <div class="pagination">
                     {% if page_obj.has_previous %}
-                        <a href="?page=1">&laquo; First</a>
-                        <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                        <a href="?page=1">{% trans "« First" %}</a>
+                        <a href="?page={{ page_obj.previous_page_number }}">{% trans "Previous" %}</a>
                     {% endif %}
 
-                    <span class="page-current">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    <span class="page-current">{% trans "Page" %} {{ page_obj.number }} {% trans "of" %} {{ page_obj.paginator.num_pages }}</span>
 
                     {% if page_obj.has_next %}
-                        <a href="?page={{ page_obj.next_page_number }}">Next</a>
-                        <a href="?page={{ page_obj.paginator.num_pages }}">Last &raquo;</a>
+                        <a href="?page={{ page_obj.next_page_number }}">{% trans "Next" %}</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}">{% trans "Last »" %}</a>
                     {% endif %}
                 </div>
                 {% endif %}
             {% else %}
             <div class="panel-empty">
-                <h3>No consultations yet</h3>
-                <p>Start by checking in patients and completing consultations from the Daily Queue.</p>
+                <h3>{% trans "No consultations yet" %}</h3>
+                <p>{% trans "Start by checking in patients and completing consultations from the Daily Queue." %}</p>
             </div>
             {% endif %}
         </div>

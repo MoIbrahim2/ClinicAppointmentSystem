@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from datetime import datetime, timedelta
 
 from django.contrib.auth import get_user_model
@@ -109,10 +110,10 @@ def create_pending_appointment(*, patient, slot_id):
             timezone.get_current_timezone(),
         )
         if slot_datetime <= timezone.now():
-            raise ValidationError("This time slot has already passed.")
+            raise ValidationError(_("This time slot has already passed."))
 
         if slot.is_booked:
-            raise ValidationError("The session is already booked by another user.")
+            raise ValidationError(_("The session is already booked by another user."))
 
         appointment = Appointment(
             patient=patient,
@@ -126,20 +127,14 @@ def create_pending_appointment(*, patient, slot_id):
                 appointment.save()
         except IntegrityError as exc:
             if Appointment.objects.active().filter(slot_id=slot.id).exists():
-                raise ValidationError(
-                    "This time slot is already booked for this doctor."
-                ) from exc
+                raise ValidationError(_("This time slot is already booked for this doctor.")) from exc
             if Appointment.objects.active().filter(
                 patient_id=patient.pk,
                 doctor_id=slot.doctor_id,
                 slot__date=slot.date,
             ).exists():
-                raise ValidationError(
-                    "You already have an active appointment with this doctor on this day."
-                ) from exc
-            raise ValidationError(
-                "You already have another active appointment that overlaps with this time."
-            ) from exc
+                raise ValidationError(_("You already have an active appointment with this doctor on this day.")) from exc
+            raise ValidationError(_("You already have another active appointment that overlaps with this time.")) from exc
 
     return appointment
 

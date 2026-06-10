@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 import csv
 from datetime import timedelta
 from django.utils import timezone
@@ -112,13 +113,13 @@ class UserToggleActiveView(AdminRequiredMixin, View):
         user = get_object_or_404(CustomUser, pk=pk)
         # Prevent deactivating oneself
         if user == request.user:
-            messages.error(request, "You cannot deactivate your own account.")
+            messages.error(request, _("You cannot deactivate your own account."))
             return redirect('admin-users')
             
         user.is_active = not user.is_active
         user.save()
         status_text = "activated" if user.is_active else "deactivated"
-        messages.success(request, f"User {user.username} {status_text}.")
+        messages.success(request, _("User {user.username} {status_text}."))
         return redirect('admin-users')
 
 
@@ -175,6 +176,74 @@ def get_analytics_data(date_from, date_to):
             })
     doctor_performance.sort(key=lambda x: x['revenue'], reverse=True)
 
+    # 1. Most Common Diagnoses (top 10)
+    from emr.models import Consultation
+    most_common_diagnoses = list(
+        Consultation.objects.filter(appointment__created_at__gte=date_from, appointment__created_at__lte=date_to)
+        .exclude(diagnosis='')
+        .values('diagnosis')
+        .annotate(count=Count('id'))
+        .order_by('-count')[:10]
+    )
+
+    # 2. Patient Return Rate
+    completed_patients = (
+        Appointment.objects.filter(status='COMPLETED', created_at__gte=date_from, created_at__lte=date_to)
+        .values('patient')
+        .annotate(completed_count=Count('id'))
+    )
+    total_completed_patients = completed_patients.count()
+    returning_patients = completed_patients.filter(completed_count__gte=2).count()
+    patient_return_rate = round((returning_patients / total_completed_patients * 100), 1) if total_completed_patients > 0 else 0.0
+
+    # 3. Disease Statistics by Month
+    disease_stats_by_month = list(
+        Consultation.objects.filter(appointment__created_at__gte=date_from, appointment__created_at__lte=date_to)
+        .exclude(diagnosis='')
+        .annotate(month=TruncMonth('appointment__created_at'))
+        .values('month', 'diagnosis')
+        .annotate(count=Count('id'))
+        .order_by('-month', '-count')
+    )
+
+    # 4. Monthly Patient Activity (new vs returning)
+    from django.db.models import Min
+    appts_in_range = Appointment.objects.filter(
+        status='COMPLETED',
+        created_at__gte=date_from,
+        created_at__lte=date_to
+    ).values('patient_id', 'created_at').order_by('created_at')
+
+    patient_first_appt = {
+        x['patient']: x['first_date']
+        for x in Appointment.objects.filter(status='COMPLETED')
+        .values('patient')
+        .annotate(first_date=Min('created_at'))
+    }
+
+    activity_by_month = {}
+    for appt in appts_in_range:
+        appt_date = appt['created_at']
+        month = appt_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        if month not in activity_by_month:
+            activity_by_month[month] = {'new': set(), 'returning': set()}
+        
+        first_date = patient_first_appt.get(appt['patient_id'])
+        if first_date and first_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0) == month:
+            activity_by_month[month]['new'].add(appt['patient_id'])
+        else:
+            activity_by_month[month]['returning'].add(appt['patient_id'])
+
+    monthly_patient_activity = [
+        {
+            'month': m,
+            'new_count': len(data['new']),
+            'returning_count': len(data['returning']),
+            'total_count': len(data['new']) + len(data['returning'])
+        }
+        for m, data in sorted(activity_by_month.items())
+    ]
+
     return {
         'total_revenue': total_revenue,
         'total_appointments': total_appointments,
@@ -190,7 +259,14 @@ def get_analytics_data(date_from, date_to):
         'appt_status_dist': appt_status_dist,
         'role_dist': role_dist,
         'doctor_performance': doctor_performance,
+        'most_common_diagnoses': most_common_diagnoses,
+        'patient_return_rate': patient_return_rate,
+        'returning_patients': returning_patients,
+        'total_completed_patients': total_completed_patients,
+        'disease_stats_by_month': disease_stats_by_month,
+        'monthly_patient_activity': monthly_patient_activity,
     }
+
 
 
 
@@ -249,3 +325,257 @@ class AnalyticsExportView(AdminRequiredMixin, View):
             writer.writerow([stat['status'], stat['count']])
             
         return response
+
+
+from clinic.models import ClinicSettings, ClinicService
+from .forms import ClinicSettingsForm, ServiceForm
+
+class ClinicSettingsView(AdminRequiredMixin, UpdateView):
+    model = ClinicSettings
+    form_class = ClinicSettingsForm
+    template_name = 'admin_panel/clinic_settings.html'
+    success_url = reverse_lazy('admin-clinic-settings')
+
+    def get_object(self, queryset=None):
+        return ClinicSettings.get_settings()
+
+    def form_valid(self, form):
+        messages.success(self.request, "Clinic settings updated successfully.")
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['current_section'] = 'clinic-settings'
+        return context
+
+
+class ServiceListView(AdminRequiredMixin, ListView):
+    model = ClinicService
+    template_name = 'admin_panel/service_list.html'
+    context_object_name = 'services'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['current_section'] = 'clinic-services'
+        return context
+
+
+class ServiceCreateView(AdminRequiredMixin, CreateView):
+    model = ClinicService
+    form_class = ServiceForm
+    template_name = 'admin_panel/service_form.html'
+    success_url = reverse_lazy('admin-services')
+
+    def form_valid(self, form):
+        messages.success(self.request, f"Service '{form.cleaned_data['name']}' created successfully.")
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['current_section'] = 'clinic-services'
+        context['title'] = "Add New Service"
+        return context
+
+
+class ServiceEditView(AdminRequiredMixin, UpdateView):
+    model = ClinicService
+    form_class = ServiceForm
+    template_name = 'admin_panel/service_form.html'
+    success_url = reverse_lazy('admin-services')
+
+    def form_valid(self, form):
+        messages.success(self.request, f"Service '{form.cleaned_data['name']}' updated successfully.")
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['current_section'] = 'clinic-services'
+        context['title'] = "Edit Service"
+        return context
+
+
+class ServiceDeleteView(AdminRequiredMixin, View):
+    def post(self, request, pk, *args, **kwargs):
+        service = get_object_or_404(ClinicService, pk=pk)
+        service.delete()
+        messages.success(request, _("Service '{service.name}' deleted successfully."))
+        return redirect('admin-services')
+
+
+def parse_report_dates(request):
+    date_to_str = request.GET.get('date_to')
+    date_from_str = request.GET.get('date_from')
+    
+    if date_to_str:
+        try:
+            date_to = timezone.datetime.strptime(date_to_str, '%Y-%m-%d').date()
+            date_to = timezone.make_aware(timezone.datetime.combine(date_to, timezone.datetime.max.time()))
+        except ValueError:
+            date_to = timezone.now()
+    else:
+        date_to = timezone.now()
+        
+    if date_from_str:
+        try:
+            date_from = timezone.datetime.strptime(date_from_str, '%Y-%m-%d').date()
+            date_from = timezone.make_aware(timezone.datetime.combine(date_from, timezone.datetime.min.time()))
+        except ValueError:
+            date_from = date_to - timedelta(days=30)
+    else:
+        date_from = date_to - timedelta(days=30)
+        
+    return date_from, date_to
+
+
+class AppointmentReportView(AdminRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        date_from, date_to = parse_report_dates(request)
+        appointments = Appointment.objects.filter(
+            slot__date__gte=date_from.date(),
+            slot__date__lte=date_to.date()
+        ).select_related('patient', 'slot', 'slot__doctor').order_by('slot__date', 'slot__start_time')
+
+        if request.GET.get('export') == 'csv':
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = f'attachment; filename="appointment_report_{date_from.strftime("%Y%m%d")}_{date_to.strftime("%Y%m%d")}.csv"'
+            writer = csv.writer(response)
+            writer.writerow(['Appointment ID', 'Patient Name', 'Doctor Name', 'Date', 'Start Time', 'Status', 'Created At'])
+            for appt in appointments:
+                writer.writerow([
+                    appt.id,
+                    appt.patient.get_full_name() or appt.patient.username,
+                    appt.slot.doctor.get_full_name() or appt.slot.doctor.username,
+                    appt.slot.date.strftime('%Y-%m-%d'),
+                    appt.slot.start_time.strftime('%H:%M'),
+                    appt.status,
+                    appt.created_at.strftime('%Y-%m-%d %H:%M')
+                ])
+            return response
+
+        context = {
+            'appointments': appointments,
+            'date_from': date_from.strftime('%Y-%m-%d'),
+            'date_to': date_to.strftime('%Y-%m-%d'),
+            'current_section': 'report-appointments',
+        }
+        from django.shortcuts import render
+        return render(request, 'admin_panel/report_appointments.html', context)
+
+
+class BillingReportView(AdminRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        date_from, date_to = parse_report_dates(request)
+        transactions = PaymentTransaction.objects.filter(
+            created_at__gte=date_from,
+            created_at__lte=date_to
+        ).select_related('appointment', 'appointment__patient').order_by('-created_at')
+
+        if request.GET.get('export') == 'csv':
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = f'attachment; filename="billing_report_{date_from.strftime("%Y%m%d")}_{date_to.strftime("%Y%m%d")}.csv"'
+            writer = csv.writer(response)
+            writer.writerow(['Transaction ID', 'Appointment ID', 'Patient Name', 'Amount (EGP)', 'Payment Status', 'Stripe Checkout ID', 'Date'])
+            for tx in transactions:
+                writer.writerow([
+                    tx.id,
+                    tx.appointment.id if tx.appointment else '',
+                    tx.appointment.patient.get_full_name() or tx.appointment.patient.username if (tx.appointment and tx.appointment.patient) else '',
+                    tx.amount,
+                    tx.status,
+                    tx.stripe_checkout_id,
+                    tx.created_at.strftime('%Y-%m-%d %H:%M')
+                ])
+            return response
+
+        context = {
+            'transactions': transactions,
+            'date_from': date_from.strftime('%Y-%m-%d'),
+            'date_to': date_to.strftime('%Y-%m-%d'),
+            'current_section': 'report-billing',
+        }
+        from django.shortcuts import render
+        return render(request, 'admin_panel/report_billing.html', context)
+
+
+class PatientActivityReportView(AdminRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        date_from, date_to = parse_report_dates(request)
+        
+        # Get all patients
+        patients = CustomUser.objects.filter(role='PATIENT')
+        patients_data = []
+        for p in patients:
+            appts = Appointment.objects.filter(patient=p, slot__date__gte=date_from.date(), slot__date__lte=date_to.date())
+            total_cnt = appts.count()
+            if total_cnt > 0 or (p.date_joined.date() >= date_from.date() and p.date_joined.date() <= date_to.date()):
+                completed_cnt = appts.filter(status='COMPLETED').count()
+                patients_data.append({
+                    'name': p.get_full_name() or p.username,
+                    'email': p.email,
+                    'date_joined': p.date_joined,
+                    'total_appointments': total_cnt,
+                    'completed_appointments': completed_cnt
+                })
+
+        if request.GET.get('export') == 'csv':
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = f'attachment; filename="patient_activity_{date_from.strftime("%Y%m%d")}_{date_to.strftime("%Y%m%d")}.csv"'
+            writer = csv.writer(response)
+            writer.writerow(['Patient Name', 'Email', 'Date Joined', 'Total Appointments in Period', 'Completed Appointments in Period'])
+            for row in patients_data:
+                writer.writerow([
+                    row['name'],
+                    row['email'],
+                    row['date_joined'].strftime('%Y-%m-%d'),
+                    row['total_appointments'],
+                    row['completed_appointments']
+                ])
+            return response
+
+        context = {
+            'patients_data': patients_data,
+            'date_from': date_from.strftime('%Y-%m-%d'),
+            'date_to': date_to.strftime('%Y-%m-%d'),
+            'current_section': 'report-patient-activity',
+        }
+        from django.shortcuts import render
+        return render(request, 'admin_panel/report_patient_activity.html', context)
+
+
+class DiseaseStatisticsReportView(AdminRequiredMixin, View):
+    def get(self, request, *args, **kwargs):
+        date_from, date_to = parse_report_dates(request)
+        from emr.models import Consultation
+        disease_stats = list(
+            Consultation.objects.filter(
+                appointment__slot__date__gte=date_from.date(),
+                appointment__slot__date__lte=date_to.date()
+            )
+            .exclude(diagnosis='')
+            .values('diagnosis')
+            .annotate(count=Count('id'))
+            .order_by('-count')
+        )
+
+        if request.GET.get('export') == 'csv':
+            response = HttpResponse(content_type='text/csv')
+            response['Content-Disposition'] = f'attachment; filename="disease_stats_{date_from.strftime("%Y%m%d")}_{date_to.strftime("%Y%m%d")}.csv"'
+            writer = csv.writer(response)
+            writer.writerow(['Diagnosis', 'Cases Count'])
+            for stat in disease_stats:
+                writer.writerow([
+                    stat['diagnosis'],
+                    stat['count']
+                ])
+            return response
+
+        context = {
+            'disease_stats': disease_stats,
+            'date_from': date_from.strftime('%Y-%m-%d'),
+            'date_to': date_to.strftime('%Y-%m-%d'),
+            'current_section': 'report-disease-statistics',
+        }
+        from django.shortcuts import render
+        return render(request, 'admin_panel/report_disease_statistics.html', context)
+
+

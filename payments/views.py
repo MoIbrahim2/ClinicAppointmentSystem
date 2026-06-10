@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 import logging
 from decimal import Decimal
 from datetime import timedelta
@@ -80,7 +81,7 @@ def CreateCheckoutSessionView(request, appointment_id):
             slot = AppointmentSlot.objects.select_for_update().get(pk=appointment.slot_id)
 
             if slot.is_booked:
-                raise ValidationError("The session is already booked by another user.")
+                raise ValidationError(_("The session is already booked by another user."))
 
             appointment.full_clean()
     except ValidationError as exc:
@@ -91,7 +92,7 @@ def CreateCheckoutSessionView(request, appointment_id):
     consultation_fee = getattr(getattr(appointment.doctor, "doctor_profile", None), "consultation_fee", Decimal("0.00"))
 
     if consultation_fee <= 0:
-        messages.error(request, "This doctor does not have a valid consultation fee.")
+        messages.error(request, _("This doctor does not have a valid consultation fee."))
         return redirect("patient-booking")
 
     success_url = request.build_absolute_uri("/payments/success/") + "?session_id={CHECKOUT_SESSION_ID}"
@@ -166,7 +167,7 @@ def StripeWebhookView(request):
                 return HttpResponse(status=200)
 
             # Already confirmed (duplicate webhook or same user paying from multiple tabs)
-            if appointment.status == Appointment.Status.REQUESTED:
+            if appointment.status == Appointment.Status.CONFIRMED:
                 if session.payment_intent:
                     stripe.Refund.create(payment_intent=session.payment_intent)
                 return HttpResponse(status=200)
@@ -199,7 +200,7 @@ def StripeWebhookView(request):
             slot.is_booked = True
             slot.save(update_fields=["is_booked"])
 
-            appointment.status = Appointment.Status.REQUESTED
+            appointment.status = Appointment.Status.CONFIRMED
             appointment.save(update_fields=["status"])
 
             if txn:
@@ -286,3 +287,158 @@ def PatientPaymentHistoryView(request):
         "dashboard_title": "Payment History",
         "dashboard_subtitle": "Review your bills, receipts, and refund records.",
     })
+
+
+from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.db.models import Q, Sum
+from .models import Invoice, InvoicePayment
+from .forms import InvoiceCreateForm, RecordPaymentForm
+
+
+class ReceptionistRequiredMixin:
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated or request.user.role != 'RECEPTIONIST':
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
+
+
+class InvoiceCreateView(LoginRequiredMixin, ReceptionistRequiredMixin, View):
+    def get(self, request, appointment_id):
+        appointment = get_object_or_404(Appointment, pk=appointment_id)
+        if hasattr(appointment, 'invoice'):
+            messages.warning(request, _("An invoice already exists for this appointment: {appointment.invoice.invoice_number}"))
+            return redirect('invoice-detail', pk=appointment.invoice.pk)
+        
+        consultation_fee = getattr(getattr(appointment.doctor, "doctor_profile", None), "consultation_fee", Decimal("0.00"))
+        form = InvoiceCreateForm(initial={'total_amount': consultation_fee})
+        
+        return render(request, "payments/invoice_create.html", {
+            "form": form,
+            "appointment": appointment,
+            "current_section": "billing",
+        })
+
+    def post(self, request, appointment_id):
+        appointment = get_object_or_404(Appointment, pk=appointment_id)
+        if hasattr(appointment, 'invoice'):
+            messages.warning(request, _("An invoice already exists for this appointment: {appointment.invoice.invoice_number}"))
+            return redirect('invoice-detail', pk=appointment.invoice.pk)
+        
+        form = InvoiceCreateForm(request.POST)
+        if form.is_valid():
+            invoice = form.save(commit=False)
+            invoice.appointment = appointment
+            invoice.patient = appointment.patient
+            invoice.save()
+            messages.success(request, _("Invoice {invoice.invoice_number} created successfully."))
+            return redirect('invoice-detail', pk=invoice.pk)
+        
+        return render(request, "payments/invoice_create.html", {
+            "form": form,
+            "appointment": appointment,
+            "current_section": "billing",
+        })
+
+
+class InvoiceDetailView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        invoice = get_object_or_404(Invoice, pk=pk)
+        user = request.user
+        if user.role not in ('RECEPTIONIST', 'ADMIN') and invoice.patient != user:
+            return redirect('home')
+        
+        payments = invoice.payments.all().order_by("-created_at")
+        form = RecordPaymentForm(invoice=invoice)
+        
+        return render(request, "payments/invoice_detail.html", {
+            "invoice": invoice,
+            "payments": payments,
+            "form": form,
+            "current_section": "billing",
+        })
+
+
+class InvoicePrintView(LoginRequiredMixin, View):
+    def get(self, request, pk):
+        invoice = get_object_or_404(Invoice, pk=pk)
+        user = request.user
+        if user.role not in ('RECEPTIONIST', 'ADMIN') and invoice.patient != user:
+            return redirect('home')
+        
+        return render(request, "payments/invoice_print.html", {
+            "invoice": invoice,
+        })
+
+
+class RecordPaymentView(LoginRequiredMixin, ReceptionistRequiredMixin, View):
+    def post(self, request, pk):
+        invoice = get_object_or_404(Invoice, pk=pk)
+        form = RecordPaymentForm(request.POST, invoice=invoice)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.invoice = invoice
+            payment.received_by = request.user
+            payment.save()
+            messages.success(request, _("Payment of EGP {payment.amount} recorded successfully."))
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, _("{field.capitalize()}: {error}"))
+        return redirect("invoice-detail", pk=invoice.pk)
+
+
+class BillingDashboardView(LoginRequiredMixin, ReceptionistRequiredMixin, View):
+    def get(self, request):
+        active_invoices = Invoice.objects.exclude(status=Invoice.Status.CANCELLED)
+        total_invoiced = active_invoices.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+        total_collected = active_invoices.aggregate(total=Sum('paid_amount'))['total'] or Decimal('0.00')
+        outstanding_balance = total_invoiced - total_collected
+        
+        invoices = Invoice.objects.select_related('patient', 'appointment', 'appointment__slot', 'appointment__doctor').order_by('-created_at')
+        
+        # Apply filters
+        q = request.GET.get('q', '').strip()
+        if q:
+            search_filter = (
+                Q(patient__first_name__icontains=q)
+                | Q(patient__last_name__icontains=q)
+                | Q(patient__username__icontains=q)
+                | Q(patient__email__icontains=q)
+                | Q(patient__phone_number__icontains=q)
+                | Q(invoice_number__icontains=q)
+            )
+            if q.isdigit():
+                search_filter |= Q(patient__id=int(q))
+            invoices = invoices.filter(search_filter)
+            
+        status = request.GET.get('status', '').strip()
+        if status:
+            invoices = invoices.filter(status=status)
+            
+        start_date = request.GET.get('start_date', '').strip()
+        if start_date:
+            invoices = invoices.filter(created_at__date__gte=start_date)
+            
+        end_date = request.GET.get('end_date', '').strip()
+        if end_date:
+            invoices = invoices.filter(created_at__date__lte=end_date)
+            
+        paginator = Paginator(invoices, 20)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        
+        return render(request, "payments/billing_dashboard.html", {
+            "invoices": page_obj,
+            "page_obj": page_obj,
+            "total_invoiced": total_invoiced,
+            "total_collected": total_collected,
+            "outstanding_balance": outstanding_balance,
+            "search_query": q,
+            "selected_status": status,
+            "start_date": start_date,
+            "end_date": end_date,
+            "status_choices": Invoice.Status.choices,
+            "current_section": "billing",
+        })
+

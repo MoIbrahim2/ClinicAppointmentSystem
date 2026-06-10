@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Find a Doctor | Clinic System{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Find a Doctor | Clinic System" %}{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -145,248 +146,76 @@
 <section class="py-5 py-lg-6">
     <div class="container">
         <div class="doctor-header mb-4">
-            <h1 class="display-5 mb-2">Find a Doctor</h1>
-            <p class="doctor-subtitle mb-0">Browse specialists and book appointments easily</p>
+            <h1 class="display-5 mb-2">{% trans "Find a Doctor" %}</h1>
+            <p class="doctor-subtitle mb-0">{% trans "Browse specialists and book appointments easily" %}</p>
         </div>
 
-        <div class="filter-card mb-4">
+        <form method="get" class="filter-card mb-4">
             <div class="d-flex flex-column flex-lg-row gap-3 align-items-lg-end">
                 <div class="flex-fill">
-                    <div class="filter-label mb-2">Search</div>
+                    <div class="filter-label mb-2">{% trans "Search" %}</div>
                     <div class="input-group">
                         <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
-                        <input type="text" class="form-control border-start-0" placeholder="Search by doctor name">
+                        <input type="text" name="q" class="form-control border-start-0" placeholder="{% trans 'Search by doctor name' %}" value="{{ q|default:'' }}">
                     </div>
                 </div>
                 <div class="flex-fill">
-                    <div class="filter-label mb-2">Specialty</div>
-                    <select class="form-select">
-                        <option selected>All specialties</option>
-                        <option>Cardiology</option>
-                        <option>Dermatology</option>
-                        <option>Neurology</option>
-                        <option>Pediatrics</option>
-                        <option>General Medicine</option>
+                    <div class="filter-label mb-2">{% trans "Specialty" %}</div>
+                    <select name="specialty" class="form-select" onchange="this.form.submit()">
+                        <option value="">{% trans "All specialties" %}</option>
+                        {% for specialty in specialties %}
+                            <option value="{{ specialty }}" {% if selected_specialty == specialty %}selected{% endif %}>{{ specialty }}</option>
+                        {% endfor %}
                     </select>
                 </div>
-                <div class="flex-fill">
-                    <div class="filter-label mb-2">Availability</div>
-                    <select class="form-select">
-                        <option selected>Available Today</option>
-                        <option>This Week</option>
-                        <option>Next Week</option>
-                        <option>Anytime</option>
-                    </select>
-                </div>
-                <div class="flex-fill">
-                    <div class="filter-label mb-2">Rating</div>
-                    <select class="form-select">
-                        <option selected>4 stars & up</option>
-                        <option>3 stars & up</option>
-                        <option>All ratings</option>
-                    </select>
+                <div>
+                    <button type="submit" class="btn btn-primary btn-cta w-100">
+                        <i class="bi bi-filter me-2"></i>{% trans "Filter" %}
+                    </button>
                 </div>
             </div>
-        </div>
+        </form>
 
         <div class="row g-4">
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="doctor-card">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="doctor-avatar">SA</div>
-                        <div>
-                            <h5 class="mb-0 fw-bold">Dr. Sara Ahmed</h5>
-                            <div class="doctor-meta">Cardiology</div>
+            {% for doctor in doctors %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="doctor-card">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="doctor-avatar">
+                                {% if doctor.user.first_name or doctor.user.last_name %}
+                                    {{ doctor.user.first_name|slice:":1"|upper }}{{ doctor.user.last_name|slice:":1"|upper }}
+                                {% else %}
+                                    {{ doctor.user.username|slice:":2"|upper }}
+                                {% endif %}
+                            </div>
+                            <div>
+                                <h5 class="mb-0 fw-bold">{% trans "Dr." %} {{ doctor.user.get_full_name|default:doctor.user.username }}</h5>
+                                <div class="doctor-meta">{{ doctor.specialty }}</div>
+                            </div>
+                        </div>
+                        <p class="doctor-meta mb-3">{{ doctor.bio|default:"" }}</p>
+                        <div class="d-flex align-items-center justify-content-between mb-3">
+                            <div class="rating"><i class="bi bi-star-fill"></i> {% trans "4.8" %}</div>
+                            <div class="doctor-meta">{% trans "8+ years experience" %}</div>
+                        </div>
+                        <div class="fee mb-3">{% trans "Consultation Fee:" %} {% trans "EGP" %} {{ doctor.consultation_fee }}</div>
+                        <div class="d-flex align-items-center justify-content-between">
+                            <span class="availability available">{% trans "Available Today" %}</span>
+                            <a href="{% url 'patient-booking' %}?doctor={{ doctor.user.id }}" class="btn btn-primary btn-cta">
+                                <i class="bi bi-calendar-plus me-2"></i>{% trans "Book Appointment" %}
+                            </a>
                         </div>
                     </div>
-                    <p class="doctor-meta mb-3">Focused on preventive cardiology and long-term heart health plans.</p>
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="rating"><i class="bi bi-star-fill"></i>4.9</div>
-                        <div class="doctor-meta">8 years experience</div>
-                    </div>
-                    <div class="fee mb-3">Consultation Fee: EGP 120.00</div>
-                    <div class="d-flex align-items-center justify-content-between">
-                        <span class="availability available">Available Today</span>
-                        <button class="btn btn-primary btn-cta" type="button">
-                            <i class="bi bi-calendar-plus me-2"></i>Book Appointment
-                        </button>
+                </div>
+            {% empty %}
+                <div class="col-12">
+                    <div class="empty-state text-center mt-4">
+                        <i class="bi bi-search fs-1 mb-3"></i>
+                        <h5 class="fw-bold">{% trans "No doctors found" %}</h5>
+                        <p class="mb-0">{% trans "Try adjusting your filters or search term to see more results." %}</p>
                     </div>
                 </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="doctor-card">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="doctor-avatar">OM</div>
-                        <div>
-                            <h5 class="mb-0 fw-bold">Dr. Omar Hassan</h5>
-                            <div class="doctor-meta">Neurology</div>
-                        </div>
-                    </div>
-                    <p class="doctor-meta mb-3">Specializes in chronic migraines, nerve recovery, and neuro checks.</p>
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="rating"><i class="bi bi-star-fill"></i>4.8</div>
-                        <div class="doctor-meta">11 years experience</div>
-                    </div>
-                    <div class="fee mb-3">Consultation Fee: EGP 150.00</div>
-                    <div class="d-flex align-items-center justify-content-between">
-                        <span class="availability busy">Busy Today</span>
-                        <button class="btn btn-primary btn-cta" type="button">
-                            <i class="bi bi-calendar-plus me-2"></i>Book Appointment
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="doctor-card">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="doctor-avatar">MA</div>
-                        <div>
-                            <h5 class="mb-0 fw-bold">Dr. Mona Ali</h5>
-                            <div class="doctor-meta">Dermatology</div>
-                        </div>
-                    </div>
-                    <p class="doctor-meta mb-3">Skin health expert focused on acne care and non-invasive treatments.</p>
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="rating"><i class="bi bi-star-fill"></i>4.7</div>
-                        <div class="doctor-meta">6 years experience</div>
-                    </div>
-                    <div class="fee mb-3">Consultation Fee: EGP 95.00</div>
-                    <div class="d-flex align-items-center justify-content-between">
-                        <span class="availability available">Available Today</span>
-                        <button class="btn btn-primary btn-cta" type="button">
-                            <i class="bi bi-calendar-plus me-2"></i>Book Appointment
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="doctor-card">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="doctor-avatar">RH</div>
-                        <div>
-                            <h5 class="mb-0 fw-bold">Dr. Rania Hassan</h5>
-                            <div class="doctor-meta">Pediatrics</div>
-                        </div>
-                    </div>
-                    <p class="doctor-meta mb-3">Gentle pediatric care with a focus on growth milestones and wellness.</p>
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="rating"><i class="bi bi-star-fill"></i>4.9</div>
-                        <div class="doctor-meta">9 years experience</div>
-                    </div>
-                    <div class="fee mb-3">Consultation Fee: EGP 110.00</div>
-                    <div class="d-flex align-items-center justify-content-between">
-                        <span class="availability available">Available Today</span>
-                        <button class="btn btn-primary btn-cta" type="button">
-                            <i class="bi bi-calendar-plus me-2"></i>Book Appointment
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="doctor-card">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="doctor-avatar">YA</div>
-                        <div>
-                            <h5 class="mb-0 fw-bold">Dr. Youssef Adel</h5>
-                            <div class="doctor-meta">General Medicine</div>
-                        </div>
-                    </div>
-                    <p class="doctor-meta mb-3">Family physician offering holistic care and preventive screenings.</p>
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="rating"><i class="bi bi-star-fill"></i>4.6</div>
-                        <div class="doctor-meta">5 years experience</div>
-                    </div>
-                    <div class="fee mb-3">Consultation Fee: EGP 75.00</div>
-                    <div class="d-flex align-items-center justify-content-between">
-                        <span class="availability busy">Busy Today</span>
-                        <button class="btn btn-primary btn-cta" type="button">
-                            <i class="bi bi-calendar-plus me-2"></i>Book Appointment
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="doctor-card">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="doctor-avatar">LN</div>
-                        <div>
-                            <h5 class="mb-0 fw-bold">Dr. Layla Nabil</h5>
-                            <div class="doctor-meta">Cardiology</div>
-                        </div>
-                    </div>
-                    <p class="doctor-meta mb-3">Cardiac diagnostics with a focus on fast recovery care plans.</p>
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="rating"><i class="bi bi-star-fill"></i>4.8</div>
-                        <div class="doctor-meta">7 years experience</div>
-                    </div>
-                    <div class="fee mb-3">Consultation Fee: EGP 130.00</div>
-                    <div class="d-flex align-items-center justify-content-between">
-                        <span class="availability available">Available Today</span>
-                        <button class="btn btn-primary btn-cta" type="button">
-                            <i class="bi bi-calendar-plus me-2"></i>Book Appointment
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="doctor-card">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="doctor-avatar">FK</div>
-                        <div>
-                            <h5 class="mb-0 fw-bold">Dr. Farah Khaled</h5>
-                            <div class="doctor-meta">Dermatology</div>
-                        </div>
-                    </div>
-                    <p class="doctor-meta mb-3">Advanced aesthetic treatments with a focus on natural results.</p>
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="rating"><i class="bi bi-star-fill"></i>4.5</div>
-                        <div class="doctor-meta">4 years experience</div>
-                    </div>
-                    <div class="fee mb-3">Consultation Fee: EGP 85.00</div>
-                    <div class="d-flex align-items-center justify-content-between">
-                        <span class="availability busy">Busy Today</span>
-                        <button class="btn btn-primary btn-cta" type="button">
-                            <i class="bi bi-calendar-plus me-2"></i>Book Appointment
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-12 col-md-6 col-lg-4">
-                <div class="doctor-card">
-                    <div class="d-flex align-items-center gap-3 mb-3">
-                        <div class="doctor-avatar">NS</div>
-                        <div>
-                            <h5 class="mb-0 fw-bold">Dr. Nada Saleh</h5>
-                            <div class="doctor-meta">Neurology</div>
-                        </div>
-                    </div>
-                    <p class="doctor-meta mb-3">Treating nerve disorders with a patient-first and data-driven approach.</p>
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                        <div class="rating"><i class="bi bi-star-fill"></i>4.7</div>
-                        <div class="doctor-meta">10 years experience</div>
-                    </div>
-                    <div class="fee mb-3">Consultation Fee: EGP 140.00</div>
-                    <div class="d-flex align-items-center justify-content-between">
-                        <span class="availability available">Available Today</span>
-                        <button class="btn btn-primary btn-cta" type="button">
-                            <i class="bi bi-calendar-plus me-2"></i>Book Appointment
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="empty-state d-none text-center mt-4">
-            <i class="bi bi-search fs-1 mb-3"></i>
-            <h5 class="fw-bold">No doctors found</h5>
-            <p class="mb-0">Try adjusting your filters or search term to see more results.</p>
+            {% endfor %}
         </div>
     </div>
 </section>

@@ -1,12 +1,13 @@
+{% load i18n %}
 <div class="role-dashboard">
     <section class="dashboard-hero">
         <div class="hero-content">
-            <div class="hero-kicker"><i class="bi bi-kanban"></i> Reception Overview</div>
-            <h1>Keep the front desk queue moving and patient records clean.</h1>
-            <p>Coordinate arrivals, appointment creation, patient approvals, and live queue handoffs from one structured desk view.</p>
+            <div class="hero-kicker"><i class="bi bi-kanban"></i> {% trans "Reception Overview" %}</div>
+            <h1>{% trans "Keep the front desk queue moving and patient records clean." %}</h1>
+            <p>{% trans "Coordinate arrivals, appointment creation, patient approvals, and live queue handoffs from one structured desk view." %}</p>
         </div>
         <div class="hero-actions">
-            <a href="{% url 'reception:walk_in' %}" class="dash-btn secondary"><i class="bi bi-person-plus"></i>Add Walk-in</a>
+            <a href="{% url 'reception:walk_in' %}" class="dash-btn secondary"><i class="bi bi-person-plus"></i>{% trans "Add Walk-in" %}</a>
         </div>
     </section>
 
@@ -14,33 +15,33 @@
         <article class="metric-card">
             <span class="metric-icon"><i class="bi bi-calendar2-check"></i></span>
             <div>
-                <div class="metric-label">Total Appointments</div>
+                <div class="metric-label">{% trans "Total Appointments" %}</div>
                 <div class="metric-value">{{ total_patients_today }}</div>
-                <div class="metric-note">Filtered results</div>
+                <div class="metric-note">{% trans "Filtered results" %}</div>
             </div>
         </article>
         <article class="metric-card">
             <span class="metric-icon"><i class="bi bi-clock"></i></span>
             <div>
-                <div class="metric-label">Pending</div>
+                <div class="metric-label">{% trans "Pending" %}</div>
                 <div class="metric-value">{{ pending_patients }}</div>
-                <div class="metric-note">Confirmed and waiting arrival</div>
+                <div class="metric-note">{% trans "Confirmed and waiting arrival" %}</div>
             </div>
         </article>
         <article class="metric-card">
             <span class="metric-icon"><i class="bi bi-check2-circle"></i></span>
             <div>
-                <div class="metric-label">Checked In</div>
+                <div class="metric-label">{% trans "Checked In" %}</div>
                 <div class="metric-value">{{ checked_in_patients }}</div>
-                <div class="metric-note">Ready for doctor queue</div>
+                <div class="metric-note">{% trans "Ready for doctor queue" %}</div>
             </div>
         </article>
         <article class="metric-card">
             <span class="metric-icon"><i class="bi bi-broadcast"></i></span>
             <div>
-                <div class="metric-label">Active</div>
+                <div class="metric-label">{% trans "Active" %}</div>
                 <div class="metric-value">{{ active_appointments }}</div>
-                <div class="metric-note">Not completed or cancelled</div>
+                <div class="metric-note">{% trans "Not completed or cancelled" %}</div>
             </div>
         </article>
     </section>
@@ -50,34 +51,34 @@
             <article class="panel-card">
                 <div class="panel-heading">
                     <div>
-                        <h2 class="panel-title">Reception appointments</h2>
-                        <p class="panel-subtitle">Desk traffic by doctor, date range, and patient search.</p>
+                        <h2 class="panel-title">{% trans "Reception appointments" %}</h2>
+                        <p class="panel-subtitle">{% trans "Desk traffic by doctor, date range, and patient search." %}</p>
                     </div>
-                    <span class="section-kicker">Focus</span>
+                    <span class="section-kicker">{% trans "Focus" %}</span>
                 </div>
 
                 <form method="get" action="" class="reception-filter-bar mb-4">
                     <div class="reception-filter-field">
-                        <label class="reception-filter-label">Doctor</label>
+                        <label class="reception-filter-label">{% trans "Doctor" %}</label>
                         <select name="doctor" class="walkin-input">
-                            <option value="">All Doctors</option>
+                            <option value="">{% trans "All Doctors" %}</option>
                             {% for doc in doctors %}
-                                <option value="{{ doc.id }}" {% if selected_doctor == doc.id|stringformat:"s" %}selected{% endif %}>Dr. {{ doc.first_name }} {{ doc.last_name }}</option>
+                                <option value="{{ doc.id }}" {% if selected_doctor == doc.id|stringformat:"s" %}selected{% endif %}>{% trans "Dr." %} {{ doc.first_name }} {{ doc.last_name }}</option>
                             {% endfor %}
                         </select>
                     </div>
                     <div class="reception-filter-field">
-                        <label class="reception-filter-label">Date</label>
+                        <label class="reception-filter-label">{% trans "Date" %}</label>
                         <input type="date" name="date_filter" class="walkin-input" value="{{ selected_date_filter }}">
                     </div>
                     <div class="reception-filter-field">
-                        <label class="reception-filter-label">Search</label>
-                        <input type="text" name="q" class="walkin-input" value="{{ search_query }}" placeholder="Search patient name" />
+                        <label class="reception-filter-label">{% trans "Search" %}</label>
+                        <input type="text" name="q" class="walkin-input" value="{{ search_query }}" placeholder="{% trans 'Search patient name' %}" />
                     </div>
                     <div class="reception-filter-actions">
-                        <button type="submit" class="btn btn-primary reception-filter-button">Filter</button>
+                        <button type="submit" class="btn btn-primary reception-filter-button">{% trans "Filter" %}</button>
                         {% if selected_doctor or selected_date_filter or search_query %}
-                            <a href="{% url 'dashboard' %}" class="reception-filter-clear">Clear</a>
+                            <a href="{% url 'dashboard' %}" class="reception-filter-clear">{% trans "Clear" %}</a>
                         {% endif %}
                     </div>
                 </form>
@@ -90,9 +91,9 @@
                                 <span class="appointment-icon"><i class="bi bi-person-check"></i></span>
                                 <div>
                                     <div class="appointment-title">{{ appt.display_patient_name }}</div>
-                                    <div class="queue-fee">EGP {{ appt.doctor.doctor_profile.consultation_fee|default_if_none:0|floatformat:2 }}</div>
+                                    <div class="queue-fee">{% trans "EGP" %} {{ appt.doctor.doctor_profile.consultation_fee|default_if_none:0|floatformat:2 }}</div>
                                     <div class="appointment-meta">
-                                        Dr. {{ appt.slot.doctor.first_name }} {{ appt.slot.doctor.last_name }}
+                                        {% trans "Dr." %} {{ appt.slot.doctor.first_name }} {{ appt.slot.doctor.last_name }}
                                         {% if appt.slot.doctor.doctor_profile and appt.slot.doctor.doctor_profile.specialty %}
                                             - {{ appt.slot.doctor.doctor_profile.specialty }}
                                         {% endif %}
@@ -105,21 +106,21 @@
                                             <form method="post" action="{% url 'reception:update_status' appt.id %}" style="display:inline;">
                                                 {% csrf_token %}
                                                 <input type="hidden" name="status" value="COMPLETED">
-                                                <button type="submit" class="btn btn-sm" style="border:1px solid #10b981; background:white; color:#10b981; padding:6px 10px; border-radius:6px;">COMPLETE</button>
+                                                <button type="submit" class="btn btn-sm" style="border:1px solid #10b981; background:white; color:#10b981; padding:6px 10px; border-radius:6px;">{% trans "COMPLETE" %}</button>
                                             </form>
                                         {% else %}
                                             <form method="post" action="{% url 'reception:update_status' appt.id %}" style="display:inline;">
                                                 {% csrf_token %}
                                                 <input type="hidden" name="status" value="CHECKED_IN">
-                                                <button type="submit" class="btn btn-sm" style="border:1px solid #2563eb; background:white; color:#2563eb; padding:6px 10px; border-radius:6px;">CHECK IN</button>
+                                                <button type="submit" class="btn btn-sm" style="border:1px solid #2563eb; background:white; color:#2563eb; padding:6px 10px; border-radius:6px;">{% trans "CHECK IN" %}</button>
                                             </form>
                                         {% endif %}
-                                        <button type="button" class="btn btn-sm" style="border:1px solid #ef4444; background:white; color:#ef4444; padding:6px 10px; border-radius:6px;" onclick="openReceptionCancelModal({{ appt.id }}, '{{ appt.patient.get_full_name|default:appt.patient.username|escapejs }}', '{% url 'reception:update_status' appt.id %}')">CANCEL</button>
+                                        <button type="button" class="btn btn-sm" style="border:1px solid #ef4444; background:white; color:#ef4444; padding:6px 10px; border-radius:6px;" onclick="openReceptionCancelModal({{ appt.id }}, '{{ appt.patient.get_full_name|default:appt.patient.username|escapejs }}', '{% url 'reception:update_status' appt.id %}')">{% trans "CANCEL" %}</button>
                                     {% endif %}
 
                                     {% if "walkin_" not in appt.patient.username and appt.status != 'CANCELLED' and appt.status != 'COMPLETED' %}
                                         <button type="button" class="btn btn-sm" style="border:1px solid #64748b; background:white; color:#64748b; padding:6px 10px; border-radius:6px;" data-bs-toggle="modal" data-bs-target="#rescheduleModal-{{ appt.id }}">
-                                            <i class="bi bi-clock-history"></i> RESCHEDULE
+                                            <i class="bi bi-clock-history"></i> {% trans "RESCHEDULE" %}
                                         </button>
                                     {% endif %}
                                 </div>
@@ -130,33 +131,33 @@
                                     <div class="modal-dialog modal-dialog-centered">
                                         <div class="modal-content border-0 shadow">
                                             <div class="modal-header border-bottom-0 pb-0">
-                                                <h5 class="modal-title fw-bold" style="color:#0f172a;">Reschedule Appointment</h5>
+                                                <h5 class="modal-title fw-bold" style="color:#0f172a;">{% trans "Reschedule Appointment" %}</h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
                                             <form method="post" action="{% url 'reception:reschedule' appt.id %}">
                                                 {% csrf_token %}
                                                 <div class="modal-body">
                                                     <p class="text-muted small mb-4">
-                                                        Rescheduling for <strong>{{ appt.display_patient_name }}</strong> with Dr. {{ appt.slot.doctor.first_name }} {{ appt.slot.doctor.last_name }}.
+                                                        {% trans "Rescheduling for" %} <strong>{{ appt.display_patient_name }}</strong> {% trans "with Dr." %} {{ appt.slot.doctor.first_name }} {{ appt.slot.doctor.last_name }}.
                                                     </p>
                                                     <div class="mb-3">
-                                                        <label class="form-label" style="font-weight:800; font-size:0.8rem; color:#475569; margin-bottom:6px;">New Date</label>
+                                                        <label class="form-label" style="font-weight:800; font-size:0.8rem; color:#475569; margin-bottom:6px;">{% trans "New Date" %}</label>
                                                         <input type="date" name="new_date" class="walkin-input js-reschedule-date" required>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label" style="font-weight:800; font-size:0.8rem; color:#475569; margin-bottom:6px;">New Start Time</label>
+                                                        <label class="form-label" style="font-weight:800; font-size:0.8rem; color:#475569; margin-bottom:6px;">{% trans "New Start Time" %}</label>
                                                         <select name="new_start_time" class="walkin-input js-reschedule-time" required>
-                                                            <option value="">Select a date first</option>
+                                                            <option value="">{% trans "Select a date first" %}</option>
                                                         </select>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="form-label" style="font-weight:800; font-size:0.8rem; color:#475569; margin-bottom:6px;">Reason for Rescheduling</label>
-                                                        <textarea name="reason" class="walkin-input walkin-textarea" rows="2" placeholder="Reason for rescheduling" required></textarea>
+                                                        <label class="form-label" style="font-weight:800; font-size:0.8rem; color:#475569; margin-bottom:6px;">{% trans "Reason for Rescheduling" %}</label>
+                                                        <textarea name="reason" class="walkin-input walkin-textarea" rows="2" placeholder="{% trans 'Reason for rescheduling' %}" required></textarea>
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer border-top-0 pt-0">
-                                                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
-                                                    <button type="submit" class="btn btn-primary rounded-pill px-4" style="background:#2563eb; border-color:#2563eb;">Confirm Reschedule</button>
+                                                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">{% trans "Cancel" %}</button>
+                                                    <button type="submit" class="btn btn-primary rounded-pill px-4" style="background:#2563eb; border-color:#2563eb;">{% trans "Confirm Reschedule" %}</button>
                                                 </div>
                                             </form>
                                         </div>
@@ -165,7 +166,7 @@
                             {% endif %}
                         {% endfor %}
                     {% else %}
-                        <p style="text-align:center; color:#999; padding:20px;">No appointments found for the selected filters.</p>
+                        <p style="text-align:center; color:#999; padding:20px;">{% trans "No appointments found for the selected filters." %}</p>
                     {% endif %}
                 </div>
             </article>
@@ -173,15 +174,15 @@
             <article class="panel-card">
                 <div class="panel-heading">
                     <div>
-                        <h2 class="panel-title">Shift priorities</h2>
-                        <p class="panel-subtitle">Reception work that keeps appointments, rooms, and approvals in sync.</p>
+                        <h2 class="panel-title">{% trans "Shift priorities" %}</h2>
+                        <p class="panel-subtitle">{% trans "Reception work that keeps appointments, rooms, and approvals in sync." %}</p>
                     </div>
-                    <span class="section-kicker">Desk</span>
+                    <span class="section-kicker">{% trans "Desk" %}</span>
                 </div>
                 <div class="mini-grid">
-                    <div class="mini-tile"><i class="bi bi-person-exclamation me-2"></i>Follow up no-shows and late arrivals</div>
-                    <div class="mini-tile"><i class="bi bi-door-open me-2"></i>Keep room handoff smooth after check-in</div>
-                    <div class="mini-tile"><i class="bi bi-receipt me-2"></i>Reconcile pending invoices before close</div>
+                    <div class="mini-tile"><i class="bi bi-person-exclamation me-2"></i>{% trans "Follow up no-shows and late arrivals" %}</div>
+                    <div class="mini-tile"><i class="bi bi-door-open me-2"></i>{% trans "Keep room handoff smooth after check-in" %}</div>
+                    <div class="mini-tile"><i class="bi bi-receipt me-2"></i>{% trans "Reconcile pending invoices before close" %}</div>
                 </div>
             </article>
         </div>
@@ -189,30 +190,30 @@
         <aside class="dashboard-stack">
             <article class="side-card">
                 <div class="side-heading">
-                    <h2 class="side-title">Quick highlights</h2>
-                    <span class="section-kicker">Live</span>
+                    <h2 class="side-title">{% trans "Quick highlights" %}</h2>
+                    <span class="section-kicker">{% trans "Live" %}</span>
                 </div>
                 <div class="highlight-list">
                     <div class="highlight-item">
                         <div>
-                            <div class="highlight-label">Available doctors</div>
+                            <div class="highlight-label">{% trans "Available doctors" %}</div>
                             <div class="highlight-value">{{ doctors|length }}</div>
                         </div>
-                        <span class="status-badge status-confirmed">Good</span>
+                        <span class="status-badge status-confirmed">{% trans "Good" %}</span>
                     </div>
                     <div class="highlight-item">
                         <div>
-                            <div class="highlight-label">Pending patients</div>
+                            <div class="highlight-label">{% trans "Pending patients" %}</div>
                             <div class="highlight-value">{{ pending_patients }}</div>
                         </div>
-                        <span class="status-badge status-pending">Pending</span>
+                        <span class="status-badge status-pending">{% trans "Pending" %}</span>
                     </div>
                     <div class="highlight-item">
                         <div>
-                            <div class="highlight-label">Checked in</div>
+                            <div class="highlight-label">{% trans "Checked in" %}</div>
                             <div class="highlight-value">{{ checked_in_patients }}</div>
                         </div>
-                        <span class="status-badge status-live">Info</span>
+                        <span class="status-badge status-live">{% trans "Info" %}</span>
                     </div>
                 </div>
             </article>
@@ -229,7 +230,7 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow">
             <div class="modal-header border-bottom-0 pb-0">
-                <h5 class="modal-title fw-bold" style="color:#0f172a;">Confirm Cancellation</h5>
+                <h5 class="modal-title fw-bold" style="color:#0f172a;">{% trans "Confirm Cancellation" %}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form id="receptionCancelForm" method="post" action="">
@@ -237,16 +238,16 @@
                 <input type="hidden" name="status" value="CANCELLED">
                 <div class="modal-body">
                     <p class="text-muted mb-0">
-                        Are you sure you want to cancel the appointment for <strong id="cancelPatientName"></strong>?
+                        {% trans "Are you sure you want to cancel the appointment for" %} <strong id="cancelPatientName"></strong>?
                     </p>
                     <div class="alert alert-info mt-3 border-0" style="background:#e0f2fe; color:#0369a1;">
                         <i class="bi bi-info-circle-fill me-2"></i>
-                        A <strong>100% refund</strong> of the consultation fee will be automatically processed for the patient.
+                        {% trans "A" %} <strong>{% trans "100% refund" %}</strong> {% trans "of the consultation fee will be automatically processed for the patient." %}
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Go Back</button>
-                    <button type="submit" class="btn btn-danger rounded-pill px-4" style="background:#ef4444; border-color:#ef4444;">Confirm & Refund</button>
+                    <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">{% trans "Go Back" %}</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4" style="background:#ef4444; border-color:#ef4444;">{% trans "Confirm & Refund" %}</button>
                 </div>
             </form>
         </div>

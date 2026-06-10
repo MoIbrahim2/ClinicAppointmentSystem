@@ -2,6 +2,12 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 
 
+GENDER_CHOICES = [
+    ("MALE", "Male"),
+    ("FEMALE", "Female"),
+]
+
+
 class CustomUser(AbstractUser):
     class Role(models.TextChoices):
         PATIENT = "PATIENT", "Patient"
@@ -39,6 +45,12 @@ class PatientProfile(models.Model):
     )
     date_of_birth = models.DateField()
     blood_type = models.CharField(max_length=5, blank=True)
+    allergies = models.TextField(blank=True)
+    medical_history = models.TextField(blank=True)
+    gender = models.CharField(max_length=10, choices=GENDER_CHOICES, blank=True)
+    address = models.TextField(blank=True)
+    emergency_contact_name = models.CharField(max_length=100, blank=True)
+    emergency_contact_phone = models.CharField(max_length=20, blank=True)
 
     def __str__(self):
         return self.user.get_full_name() or self.user.username

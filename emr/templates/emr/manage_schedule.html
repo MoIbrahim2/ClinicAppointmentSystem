@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Manage Schedule | Doctor Portal{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Manage Schedule | Doctor Portal" %}{% endblock %}
 
 {% block extra_css %}
     {% include "dashboard/partials/_dashboard_styles.html" %}
@@ -39,15 +40,15 @@
     <main class="dashboard-main">
         <div class="dashboard-content">
             <div style="margin-bottom: 34px;">
-                <h1 style="font-size: 2rem; font-weight: 950; margin: 0 0 8px; color: var(--dash-text);">Manage Your Schedule</h1>
-                <p style="margin: 0; color: var(--dash-muted); font-size: 0.95rem;">Set your clinic availability and session times</p>
+                <h1 style="font-size: 2rem; font-weight: 950; margin: 0 0 8px; color: var(--dash-text);">{% trans "Manage Your Schedule" %}</h1>
+                <p style="margin: 0; color: var(--dash-muted); font-size: 0.95rem;">{% trans "Set your clinic availability and session times" %}</p>
             </div>
 
             <div style="margin-bottom: 28px; padding: 22px; border: 1px solid var(--dash-border); border-radius: var(--dash-radius); background: rgba(255, 255, 255, 0.92); box-shadow: var(--dash-shadow-soft);">
                 <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px;">
                     <div>
-                        <h2 style="font-size: 1.15rem; font-weight: 900; margin: 0 0 6px; color: var(--dash-text);">Current Schedule</h2>
-                        <p style="margin: 0; color: var(--dash-muted); font-size: 0.92rem;">Saved availability shown with weekday names.</p>
+                        <h2 style="font-size: 1.15rem; font-weight: 900; margin: 0 0 6px; color: var(--dash-text);">{% trans "Current Schedule" %}</h2>
+                        <p style="margin: 0; color: var(--dash-muted); font-size: 0.92rem;">{% trans "Saved availability shown with weekday names." %}</p>
                     </div>
                 </div>
 
@@ -56,11 +57,11 @@
                     <table class="schedule-table">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Day Name</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th>Slot Duration (min)</th>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Day Name" %}</th>
+                                <th>{% trans "Start Time" %}</th>
+                                <th>{% trans "End Time" %}</th>
+                                <th>{% trans "Slot Duration (min)" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -78,7 +79,7 @@
                 </div>
                 {% else %}
                 <div style="padding: 18px 20px; border-radius: 16px; background: #f8fafc; color: var(--dash-muted); font-weight: 700;">
-                    No schedule entries yet. Add your availability below.
+                    {% trans "No schedule entries yet. Add your availability below." %}
                 </div>
                 {% endif %}
             </div>
@@ -90,12 +91,12 @@
                     <table class="schedule-table">
                         <thead>
                             <tr>
-                                <th>Date</th>
-                                <th>Day of Week</th>
-                                <th>Start Time</th>
-                                <th>End Time</th>
-                                <th>Slot Duration (min)</th>
-                                <th style="text-align: center;">Delete</th>
+                                <th>{% trans "Date" %}</th>
+                                <th>{% trans "Day of Week" %}</th>
+                                <th>{% trans "Start Time" %}</th>
+                                <th>{% trans "End Time" %}</th>
+                                <th>{% trans "Slot Duration (min)" %}</th>
+                                <th style="text-align: center;">{% trans "Delete" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -115,8 +116,8 @@
                 </div>
 
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> Save Schedule</button>
-                    <a href="{% url 'dashboard' %}" class="btn btn-secondary">Back</a>
+                    <button type="submit" class="btn btn-primary"><i class="bi bi-check-circle"></i> {% trans "Save Schedule" %}</button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary">{% trans "Back" %}</a>
                 </div>
             </form>
         </div>

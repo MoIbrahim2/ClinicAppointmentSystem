@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}My Appointments | Clinic System{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "My Appointments | Clinic System" %}{% endblock %}
 
 {% block extra_css %}
 {% include "dashboard/partials/_dashboard_styles.html" %}
@@ -398,24 +399,24 @@
 
         <section class="appointments-shell">
             <section class="appointments-hero">
-                <span class="hero-badge"><i class="bi bi-journal-check"></i> Appointment Center</span>
-                <h1>Track upcoming visits and look back at previous appointments.</h1>
+                <span class="hero-badge"><i class="bi bi-journal-check"></i> {% trans "Appointment Center" %}</span>
+                <h1>{% trans "Track upcoming visits and look back at previous appointments." %}</h1>
                 <p>
-                    This page is connected to the appointment history view and separates future visits from past ones
-                    so patients can quickly understand what still needs attention.
+                    {% trans "This page is connected to the appointment history view and separates future visits from past ones
+                    so patients can quickly understand what still needs attention." %}
                 </p>
 
                 <div class="stats-row">
                     <div class="stat-card">
-                        <div class="stat-label">Upcoming</div>
+                        <div class="stat-label">{% trans "Upcoming" %}</div>
                         <div class="stat-value">{{ upcoming|length }}</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">History</div>
+                        <div class="stat-label">{% trans "History" %}</div>
                         <div class="stat-value">{{ history|length }}</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-label">Patient</div>
+                        <div class="stat-label">{% trans "Patient" %}</div>
                         <div class="stat-value">{{ request.user.username }}</div>
                     </div>
                 </div>
@@ -426,9 +427,9 @@
                     <section class="panel-card">
                         <div class="panel-head">
                             <div>
-                                <span class="tab-kicker">Upcoming Visits</span>
-                                <h2>Appointments that still need your attention</h2>
-                                <p>Keep an eye on scheduled times, assigned doctors, and payment-related statuses.</p>
+                                <span class="tab-kicker">{% trans "Upcoming Visits" %}</span>
+                                <h2>{% trans "Appointments that still need your attention" %}</h2>
+                                <p>{% trans "Keep an eye on scheduled times, assigned doctors, and payment-related statuses." %}</p>
                             </div>
                         </div>
 
@@ -441,42 +442,37 @@
                                     </div>
                                     <div>
                                         <div class="appointment-title">
-                                            Dr. {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}
+                                            {% trans "Dr." %} {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}
                                         </div>
                                         <div class="appointment-meta">
                                             <span><i class="bi bi-clock"></i>{{ appointment.slot.start_time|time:"H:i" }} - {{ appointment.slot.end_time|time:"H:i" }}</span>
                                             <span><i class="bi bi-calendar3"></i>{{ appointment.slot.date|date:"l" }}</span>
-                                            <span><i class="bi bi-receipt"></i>Created {{ appointment.created_at|date:"M d, Y" }}</span>
+                                            <span><i class="bi bi-receipt"></i>{% trans "Created" %} {{ appointment.created_at|date:"M d, Y" }}</span>
                                         </div>
                                     </div>
                                     <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.5rem;">
                                         <span class="status-pill status-{{ appointment.status }}">{{ appointment.get_status_display }}</span>
                                         {% if appointment.status == "AWAITING_PAYMENT" %}
                                             <a href="{% url 'stripe-checkout' appointment.id %}" class="pay-now-btn">
-                                                <i class="bi bi-credit-card me-1"></i>Pay Now
+                                                <i class="bi bi-credit-card me-1"></i>{% trans "Pay Now" %}
                                             </a>
                                         {% elif appointment.status == "REQUESTED" or appointment.status == "CONFIRMED" %}
                                             <div class="cancel-form">
-                                                <textarea
-                                                    id="cancel-reason-{{ appointment.id }}"
-                                                    class="cancel-reason"
-                                                    rows="2"
-                                                    placeholder="Why are you cancelling?"
-                                                ></textarea>
+                                                <textarea id="cancel-reason-{{ appointment.id }}" class="cancel-reason" rows="2" placeholder="{% trans 'Why are you cancelling?' %}"></textarea>
                                                 <button type="button" class="cancel-btn" onclick="openCancelModal({{ appointment.id }})">
-                                                    <i class="bi bi-x-circle me-1"></i>Cancel Appointment
+                                                    <i class="bi bi-x-circle me-1"></i>{% trans "Cancel Appointment" %}
                                                 </button>
                                             </div>
                                         {% elif appointment.consultation %}
                                             <a href="{% url 'emr:patient-consultation-summary' appointment.id %}" class="summary-btn">
-                                                <i class="bi bi-file-earmark-medical me-1"></i>View Summary
+                                                <i class="bi bi-file-earmark-medical me-1"></i>{% trans "View Summary" %}
                                             </a>
                                         {% endif %}
                                     </div>
                                 </article>
                             {% empty %}
                                 <div class="empty-card">
-                                    No upcoming appointments yet. Once you book a visit, it will appear here.
+                                    {% trans "No upcoming appointments yet. Once you book a visit, it will appear here." %}
                                 </div>
                             {% endfor %}
                         </div>
@@ -485,9 +481,9 @@
                     <section class="panel-card">
                         <div class="panel-head">
                             <div>
-                                <span class="tab-kicker">History</span>
-                                <h2>Past appointments</h2>
-                                <p>A clean archive for follow-up, review, and future rebooking decisions.</p>
+                                <span class="tab-kicker">{% trans "History" %}</span>
+                                <h2>{% trans "Past appointments" %}</h2>
+                                <p>{% trans "A clean archive for follow-up, review, and future rebooking decisions." %}</p>
                             </div>
                         </div>
 
@@ -500,7 +496,7 @@
                                     </div>
                                     <div>
                                         <div class="appointment-title">
-                                            Dr. {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}
+                                            {% trans "Dr." %} {{ appointment.doctor.get_full_name|default:appointment.doctor.username }}
                                         </div>
                                         <div class="appointment-meta">
                                             <span><i class="bi bi-clock-history"></i>{{ appointment.slot.start_time|time:"H:i" }} - {{ appointment.slot.end_time|time:"H:i" }}</span>
@@ -511,14 +507,14 @@
                                         <span class="status-pill status-{{ appointment.status }}">{{ appointment.get_status_display }}</span>
                                         {% if appointment.consultation %}
                                             <a href="{% url 'emr:patient-consultation-summary' appointment.id %}" class="summary-btn">
-                                                <i class="bi bi-file-earmark-medical me-1"></i>View Summary
+                                                <i class="bi bi-file-earmark-medical me-1"></i>{% trans "View Summary" %}
                                             </a>
                                         {% endif %}
                                     </div>
                                 </article>
                             {% empty %}
                                 <div class="empty-card">
-                                    No appointment history is available yet.
+                                    {% trans "No appointment history is available yet." %}
                                 </div>
                             {% endfor %}
                         </div>
@@ -527,25 +523,25 @@
 
                 <aside class="side-panel">
                     <section class="panel-card">
-                        <h2>Need a new appointment?</h2>
-                        <p>Use the booking page to check fresh slot availability and confirm the next visit.</p>
+                        <h2>{% trans "Need a new appointment?" %}</h2>
+                        <p>{% trans "Use the booking page to check fresh slot availability and confirm the next visit." %}</p>
                         <a class="btn btn-primary w-100 mt-3" href="{% url 'patient-booking' %}">
-                            <i class="bi bi-calendar-plus me-1"></i>Book appointment
+                            <i class="bi bi-calendar-plus me-1"></i>{% trans "Book appointment" %}
                         </a>
                     </section>
 
                     <section class="tip-card">
-                        <h2 class="h5 mb-0">Helpful reminders</h2>
+                        <h2 class="h5 mb-0">{% trans "Helpful reminders" %}</h2>
                         <ul class="tip-list">
-                            <li><i class="bi bi-check2-circle"></i><span>Confirmed appointments are usually ready for visit-day check-in.</span></li>
-                            <li><i class="bi bi-check2-circle"></i><span>Awaiting payment means the booking exists but still needs payment follow-up.</span></li>
-                            <li><i class="bi bi-check2-circle"></i><span>Review your appointment history before scheduling a follow-up consultation.</span></li>
+                            <li><i class="bi bi-check2-circle"></i><span>{% trans "Confirmed appointments are usually ready for visit-day check-in." %}</span></li>
+                            <li><i class="bi bi-check2-circle"></i><span>{% trans "Awaiting payment means the booking exists but still needs payment follow-up." %}</span></li>
+                            <li><i class="bi bi-check2-circle"></i><span>{% trans "Review your appointment history before scheduling a follow-up consultation." %}</span></li>
                         </ul>
                     </section>
 
                     <section class="action-card">
-                        <h2 class="h5 mb-0">Account snapshot</h2>
-                        <p class="mt-2 mb-0">Signed in as <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>.</p>
+                        <h2 class="h5 mb-0">{% trans "Account snapshot" %}</h2>
+                        <p class="mt-2 mb-0">{% trans "Signed in as" %} <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>.</p>
                     </section>
                 </aside>
             </div>
@@ -556,11 +552,11 @@
 <div id="cancelWarningModal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
         <div class="modal-icon modal-icon-warning"><i class="bi bi-exclamation-triangle-fill"></i></div>
-        <h3>Are you sure?</h3>
+        <h3>{% trans "Are you sure?" %}</h3>
         <p id="cancelWarningText"></p>
         <div class="modal-actions">
-            <button class="modal-btn modal-btn-secondary" onclick="closeCancelModal()">Go Back</button>
-            <button class="modal-btn modal-btn-danger" id="confirmCancelBtn" onclick="confirmCancel()">Yes, Cancel</button>
+            <button class="modal-btn modal-btn-secondary" onclick="closeCancelModal()">{% trans "Go Back" %}</button>
+            <button class="modal-btn modal-btn-danger" id="confirmCancelBtn" onclick="confirmCancel()">{% trans "Yes, Cancel" %}</button>
         </div>
     </div>
 </div>
@@ -569,10 +565,10 @@
 <div id="refundSuccessModal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
         <div class="modal-icon modal-icon-success"><i class="bi bi-check-circle-fill"></i></div>
-        <h3>Appointment Cancelled</h3>
+        <h3>{% trans "Appointment Cancelled" %}</h3>
         <p id="refundSuccessText"></p>
         <div class="modal-actions">
-            <button class="modal-btn modal-btn-primary" onclick="location.reload()">OK</button>
+            <button class="modal-btn modal-btn-primary" onclick="location.reload()">{% trans "OK" %}</button>
         </div>
     </div>
 </div>

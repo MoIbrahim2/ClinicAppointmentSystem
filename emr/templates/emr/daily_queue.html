@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}Daily Queue | Doctor Portal{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Daily Queue | Doctor Portal" %}{% endblock %}
 
 {% block extra_css %}
     {% include "dashboard/partials/_dashboard_styles.html" %}
@@ -50,26 +51,26 @@
     <main class="dashboard-main">
         <div class="dashboard-content">
             <div style="margin-bottom: 34px;">
-                <h1 style="font-size: 2rem; font-weight: 950; margin: 0 0 8px; color: var(--dash-text);">Weekly Schedule</h1>
+                <h1 style="font-size: 2rem; font-weight: 950; margin: 0 0 8px; color: var(--dash-text);">{% trans "Weekly Schedule" %}</h1>
                 <p style="margin: 0; color: var(--dash-muted); font-size: 0.95rem;">{{ week_start|date:"M d" }} - {{ week_end|date:"M d, Y" }}</p>
             </div>
 
             <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; margin-bottom: 34px;">
                 <div class="metric-card">
                     <div>
-                        <h3>This Week</h3>
+                        <h3>{% trans "This Week" %}</h3>
                         <span class="metric-value">{{ total_weekly }}</span>
                     </div>
                 </div>
                 <div class="metric-card">
                     <div>
-                        <h3>Completed</h3>
+                        <h3>{% trans "Completed" %}</h3>
                         <span class="metric-value">{{ completed_this_week }}</span>
                     </div>
                 </div>
                 <div class="metric-card">
                     <div>
-                        <h3>Pending</h3>
+                        <h3>{% trans "Pending" %}</h3>
                         <span class="metric-value">{{ pending_this_week }}</span>
                     </div>
                 </div>
@@ -94,7 +95,7 @@
                                     <div style="margin: 0;">
                                         <div style="font-weight: 900; color: var(--dash-text); margin-bottom: 4px;">{{ appointment.patient.get_full_name|default:appointment.patient.username }}</div>
                                         <div style="font-size: 0.85rem; color: var(--dash-muted);">
-                                            Status: 
+                                            {% trans "Status:" %} 
                                             <span style="display: inline-block; padding: 2px 8px; border-radius: 6px; font-weight: 700;
                                                 {% if appointment.status == 'CHECKED_IN' %}background: rgba(5, 150, 105, 0.2); color: var(--role-primary);
                                                 {% elif appointment.status == 'CONFIRMED' %}background: rgba(37, 99, 235, 0.2); color: #2563eb;
@@ -110,11 +111,11 @@
                                 <td style="text-align: right; width: 200px;">
                                     {% if appointment.status == 'CHECKED_IN' or appointment.status == 'COMPLETED' %}
                                         <a href="{% url 'emr:consultation-create' appointment.id %}" class="btn btn-primary" style="font-size: 0.85rem; padding: 8px 16px;">
-                                            <i class="bi bi-stethoscope"></i> Start Consultation
+                                            <i class="bi bi-stethoscope"></i> {% trans "Start Consultation" %}
                                         </a>
                                     {% else %}
                                         <button type="button" class="btn btn-disabled" style="font-size: 0.85rem; padding: 8px 16px;" disabled>
-                                            <i class="bi bi-stethoscope"></i> Start Consultation
+                                            <i class="bi bi-stethoscope"></i> {% trans "Start Consultation" %}
                                         </button>
                                     {% endif %}
                                 </td>
@@ -127,8 +128,8 @@
             </div>
             {% else %}
             <div class="panel-empty">
-                <h3>No appointments this week</h3>
-                <p>No appointments scheduled for {{ week_start|date:"M d" }} - {{ week_end|date:"M d" }}. Check your schedule.</p>
+                <h3>{% trans "No appointments this week" %}</h3>
+                <p>{% trans "No appointments scheduled for" %} {{ week_start|date:"M d" }} - {{ week_end|date:"M d" }}{% trans ". Check your schedule." %}</p>
             </div>
             {% endif %}
         </div>

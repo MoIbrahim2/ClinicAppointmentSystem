@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
-{% block title %}User Management | Admin Dashboard{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "User Management | Admin Dashboard" %}{% endblock %}
 
 {% block extra_css %}
     {% include "dashboard/partials/_dashboard_styles.html" %}
@@ -14,11 +15,11 @@
         <div class="dashboard-content">
             <div class="panel-heading mb-4 d-flex justify-content-between align-items-center">
                 <div>
-                    <h1 class="panel-title fs-2">User Management</h1>
-                    <p class="panel-subtitle">Manage system access, roles, and user accounts</p>
+                    <h1 class="panel-title fs-2">{% trans "User Management" %}</h1>
+                    <p class="panel-subtitle">{% trans "Manage system access, roles, and user accounts" %}</p>
                 </div>
                 <a href="{% url 'admin-user-create' %}" class="btn btn-primary d-inline-flex align-items-center gap-2">
-                    <i class="bi bi-person-plus-fill"></i> Create User
+                    <i class="bi bi-person-plus-fill"></i> {% trans "Create User" %}
                 </a>
             </div>
 
@@ -26,33 +27,33 @@
             <div class="reception-filter-bar mb-4">
                 <form method="get" class="d-flex flex-wrap gap-3 w-100 align-items-end">
                     <div class="reception-filter-field flex-grow-1">
-                        <label class="reception-filter-label">Search Users</label>
-                        <input type="text" name="q" class="walkin-input" placeholder="Name, email, or username..." value="{{ q }}">
+                        <label class="reception-filter-label">{% trans "Search Users" %}</label>
+                        <input type="text" name="q" class="walkin-input" placeholder="{% trans 'Name, email, or username...' %}" value="{{ q }}">
                     </div>
                     
                     <div class="reception-filter-field">
-                        <label class="reception-filter-label">Role</label>
+                        <label class="reception-filter-label">{% trans "Role" %}</label>
                         <select name="role" class="form-select walkin-input px-3">
-                            <option value="ALL" {% if role == 'ALL' %}selected{% endif %}>All Roles</option>
-                            <option value="PATIENT" {% if role == 'PATIENT' %}selected{% endif %}>Patient</option>
-                            <option value="DOCTOR" {% if role == 'DOCTOR' %}selected{% endif %}>Doctor</option>
-                            <option value="RECEPTIONIST" {% if role == 'RECEPTIONIST' %}selected{% endif %}>Receptionist</option>
-                            <option value="ADMIN" {% if role == 'ADMIN' %}selected{% endif %}>Admin</option>
+                            <option value="ALL" {% if role == 'all' %}selected{% endif %}>{% trans "All Roles" %}</option>
+                            <option value="PATIENT" {% if role == 'patient' %}selected{% endif %}>{% trans "Patient" %}</option>
+                            <option value="DOCTOR" {% if role == 'doctor' %}selected{% endif %}>{% trans "Doctor" %}</option>
+                            <option value="RECEPTIONIST" {% if role == 'receptionist' %}selected{% endif %}>{% trans "Receptionist" %}</option>
+                            <option value="ADMIN" {% if role == 'admin' %}selected{% endif %}>{% trans "Admin" %}</option>
                         </select>
                     </div>
 
                     <div class="reception-filter-field">
-                        <label class="reception-filter-label">Status</label>
+                        <label class="reception-filter-label">{% trans "Status" %}</label>
                         <select name="status" class="form-select walkin-input px-3">
-                            <option value="ALL" {% if status == 'ALL' %}selected{% endif %}>All Status</option>
-                            <option value="Active" {% if status == 'Active' %}selected{% endif %}>Active</option>
-                            <option value="Inactive" {% if status == 'Inactive' %}selected{% endif %}>Inactive</option>
+                            <option value="ALL" {% if status == 'all' %}selected{% endif %}>{% trans "All Status" %}</option>
+                            <option value="Active" {% if status == 'active' %}selected{% endif %}>{% trans "Active" %}</option>
+                            <option value="Inactive" {% if status == 'inactive' %}selected{% endif %}>{% trans "Inactive" %}</option>
                         </select>
                     </div>
 
                     <div class="reception-filter-actions">
-                        <button type="submit" class="btn reception-filter-button text-white">Filter</button>
-                        <a href="{% url 'admin-users' %}" class="btn reception-filter-clear">Clear</a>
+                        <button type="submit" class="btn reception-filter-button text-white">{% trans "Filter" %}</button>
+                        <a href="{% url 'admin-users' %}" class="btn reception-filter-clear">{% trans "Clear" %}</a>
                     </div>
                 </form>
             </div>
@@ -63,11 +64,11 @@
                     <table class="table table-hover align-middle mb-0" style="border-collapse: collapse;">
                         <thead class="table-light">
                             <tr>
-                                <th class="py-3 px-4 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 800;">User</th>
-                                <th class="py-3 px-4 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 800;">Role</th>
-                                <th class="py-3 px-4 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 800;">Status</th>
-                                <th class="py-3 px-4 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 800;">Joined</th>
-                                <th class="py-3 px-4 text-end text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 800;">Actions</th>
+                                <th class="py-3 px-4 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 800;">{% trans "User" %}</th>
+                                <th class="py-3 px-4 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 800;">{% trans "Role" %}</th>
+                                <th class="py-3 px-4 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 800;">{% trans "Status" %}</th>
+                                <th class="py-3 px-4 text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 800;">{% trans "Joined" %}</th>
+                                <th class="py-3 px-4 text-end text-muted text-uppercase" style="font-size: 0.75rem; letter-spacing: 0.05em; font-weight: 800;">{% trans "Actions" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -89,9 +90,9 @@
                                 </td>
                                 <td class="p-4">
                                     {% if user.is_active %}
-                                        <span class="status-badge status-confirmed"><i class="bi bi-check-circle-fill me-1"></i> Active</span>
+                                        <span class="status-badge status-confirmed"><i class="bi bi-check-circle-fill me-1"></i> {% trans "Active" %}</span>
                                     {% else %}
-                                        <span class="status-badge" style="color: #ef4444; background: #fee2e2;"><i class="bi bi-x-circle-fill me-1"></i> Inactive</span>
+                                        <span class="status-badge" style="color: #ef4444; background: #fee2e2;"><i class="bi bi-x-circle-fill me-1"></i> {% trans "Inactive" %}</span>
                                     {% endif %}
                                 </td>
                                 <td class="p-4">
@@ -99,13 +100,13 @@
                                 </td>
                                 <td class="p-4 text-end">
                                     <div class="d-flex justify-content-end gap-2">
-                                        <a href="{% url 'admin-user-edit' user.id %}" class="btn btn-sm" style="background: #f1f5f9; color: #475569; font-weight: 700; border-radius: 10px;">Edit</a>
+                                        <a href="{% url 'admin-user-edit' user.id %}" class="btn btn-sm" style="background: #f1f5f9; color: #475569; font-weight: 700; border-radius: 10px;">{% trans "Edit" %}</a>
                                         
                                         {% if request.user != user %}
                                         <form method="post" action="{% url 'admin-user-toggle' user.id %}" class="d-inline">
                                             {% csrf_token %}
                                             <button type="submit" class="btn btn-sm" style="background: {% if user.is_active %}#fee2e2; color: #ef4444;{% else %}#d1fae5; color: #047857;{% endif %} font-weight: 700; border-radius: 10px;">
-                                                {% if user.is_active %}Deactivate{% else %}Activate{% endif %}
+                                                {% if user.is_active %}{% trans "Deactivate" %}{% else %}{% trans "Activate" %}{% endif %}
                                             </button>
                                         </form>
                                         {% endif %}
@@ -115,7 +116,7 @@
                             {% empty %}
                             <tr>
                                 <td colspan="5" class="p-5 text-center text-muted fw-bold">
-                                    No users found matching your criteria.
+                                    {% trans "No users found matching your criteria." %}
                                 </td>
                             </tr>
                             {% endfor %}
@@ -129,7 +130,7 @@
                     <nav aria-label="User pagination">
                         <ul class="pagination mb-0 justify-content-center">
                             {% if page_obj.has_previous %}
-                                <li class="page-item"><a class="page-link border-0 fw-bold text-muted" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&role={{ role }}&status={{ status }}">Previous</a></li>
+                                <li class="page-item"><a class="page-link border-0 fw-bold text-muted" href="?page={{ page_obj.previous_page_number }}&q={{ q }}&role={{ role }}&status={{ status }}">{% trans "Previous" %}</a></li>
                             {% endif %}
                             
                             {% for i in page_obj.paginator.page_range %}
@@ -141,7 +142,7 @@
                             {% endfor %}
 
                             {% if page_obj.has_next %}
-                                <li class="page-item"><a class="page-link border-0 fw-bold text-muted" href="?page={{ page_obj.next_page_number }}&q={{ q }}&role={{ role }}&status={{ status }}">Next</a></li>
+                                <li class="page-item"><a class="page-link border-0 fw-bold text-muted" href="?page={{ page_obj.next_page_number }}&q={{ q }}&role={{ role }}&status={{ status }}">{% trans "Next" %}</a></li>
                             {% endif %}
                         </ul>
                     </nav>

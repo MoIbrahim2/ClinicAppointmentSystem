@@ -53,7 +53,7 @@ class PaymentsViewsTests(TestCase):
     def test_payment_success_view_unauthenticated(self):
         response = self.client.get(reverse("payment-success"))
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(response.url.startswith("/accounts/login/"))
+        self.assertIn("/accounts/login/", response.url)
 
     @patch("payments.views.render")
     def test_payment_success_view_authenticated(self, mock_render):
@@ -116,11 +116,13 @@ class StripeWebhookTests(TestCase):
         self.client = Client()
         self.patient = User.objects.create_user(
             username="patient2",
+            email="patient2@test.com",
             password="password123",
             role=User.Role.PATIENT
         )
         self.doctor = User.objects.create_user(
             username="doctor2",
+            email="doctor2@test.com",
             password="password123",
             role=User.Role.DOCTOR
         )
@@ -262,3 +264,175 @@ class StripeWebhookTests(TestCase):
         # Appointment should still be CONFIRMED (not changed)
         self.appointment.refresh_from_db()
         self.assertEqual(self.appointment.status, Appointment.Status.CONFIRMED)
+
+
+from payments.models import Invoice, InvoicePayment
+
+class BillingInvoicesTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.patient = User.objects.create_user(
+            username="patient_test",
+            email="patient_test@test.com",
+            password="password123",
+            role=User.Role.PATIENT,
+            first_name="Jane",
+            last_name="Doe"
+        )
+        self.other_patient = User.objects.create_user(
+            username="other_patient",
+            email="other_patient@test.com",
+            password="password123",
+            role=User.Role.PATIENT
+        )
+        self.receptionist = User.objects.create_user(
+            username="receptionist_test",
+            email="receptionist_test@test.com",
+            password="password123",
+            role=User.Role.RECEPTIONIST
+        )
+        self.doctor = User.objects.create_user(
+            username="doctor_test",
+            email="doctor_test@test.com",
+            password="password123",
+            role=User.Role.DOCTOR
+        )
+        DoctorProfile.objects.create(
+            user=self.doctor,
+            specialty="Pediatrics",
+            bio="Pediatrician",
+            consultation_fee=Decimal("200.00"),
+        )
+        self.slot = AppointmentSlot.objects.create(
+            doctor=self.doctor,
+            date=timezone.now().date(),
+            start_time="12:00:00",
+            end_time="12:30:00",
+            is_booked=True
+        )
+        self.appointment = Appointment.objects.create(
+            patient=self.patient,
+            doctor=self.doctor,
+            slot=self.slot,
+            status=Appointment.Status.CHECKED_IN,
+        )
+
+    def test_invoice_creation_view(self):
+        self.client.force_login(self.receptionist)
+        # GET invoice create form
+        response = self.client.get(reverse("invoice-create", args=[self.appointment.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "200.00")  # Default fee shown
+
+        # POST invoice create form
+        response = self.client.post(reverse("invoice-create", args=[self.appointment.id]), {
+            "total_amount": "250.00",
+            "notes": "Testing notes"
+        })
+        self.assertEqual(response.status_code, 302)
+        
+        # Verify invoice created
+        invoice = Invoice.objects.get(appointment=self.appointment)
+        self.assertEqual(invoice.total_amount, Decimal("250.00"))
+        self.assertEqual(invoice.patient, self.patient)
+        self.assertEqual(invoice.status, Invoice.Status.ISSUED)
+        self.assertEqual(invoice.notes, "Testing notes")
+
+    def test_invoice_creation_already_exists(self):
+        self.client.force_login(self.receptionist)
+        # Create invoice first
+        invoice = Invoice.objects.create(
+            appointment=self.appointment,
+            patient=self.patient,
+            total_amount=Decimal("200.00"),
+            status=Invoice.Status.ISSUED
+        )
+        # Try to create again
+        response = self.client.get(reverse("invoice-create", args=[self.appointment.id]))
+        self.assertRedirects(response, reverse("invoice-detail", args=[invoice.pk]))
+
+    def test_invoice_detail_view_permissions(self):
+        invoice = Invoice.objects.create(
+            appointment=self.appointment,
+            patient=self.patient,
+            total_amount=Decimal("200.00"),
+            status=Invoice.Status.ISSUED
+        )
+
+        # Patient can view their own invoice
+        self.client.force_login(self.patient)
+        response = self.client.get(reverse("invoice-detail", args=[invoice.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Jane Doe")
+
+        # Other patient cannot view
+        self.client.force_login(self.other_patient)
+        response = self.client.get(reverse("invoice-detail", args=[invoice.pk]))
+        self.assertEqual(response.status_code, 302)
+
+        # Receptionist can view
+        self.client.force_login(self.receptionist)
+        response = self.client.get(reverse("invoice-detail", args=[invoice.pk]))
+        self.assertEqual(response.status_code, 200)
+
+    def test_record_payment_flow(self):
+        invoice = Invoice.objects.create(
+            appointment=self.appointment,
+            patient=self.patient,
+            total_amount=Decimal("300.00"),
+            status=Invoice.Status.ISSUED
+        )
+        self.client.force_login(self.receptionist)
+
+        # 1. Partial payment (100 EGP)
+        response = self.client.post(reverse("record-payment", args=[invoice.pk]), {
+            "amount": "100.00",
+            "payment_method": "CASH",
+            "notes": "First installment"
+        })
+        self.assertEqual(response.status_code, 302)
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.paid_amount, Decimal("100.00"))
+        self.assertEqual(invoice.status, Invoice.Status.PARTIALLY_PAID)
+
+        # 2. Overpaying should fail
+        response = self.client.post(reverse("record-payment", args=[invoice.pk]), {
+            "amount": "250.00", # remaining is 200
+            "payment_method": "CARD"
+        })
+        # View redirects back, payment not recorded
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.paid_amount, Decimal("100.00"))
+
+        # 3. Final payment (200 EGP)
+        response = self.client.post(reverse("record-payment", args=[invoice.pk]), {
+            "amount": "200.00",
+            "payment_method": "CARD"
+        })
+        self.assertEqual(response.status_code, 302)
+        invoice.refresh_from_db()
+        self.assertEqual(invoice.paid_amount, Decimal("300.00"))
+        self.assertEqual(invoice.status, Invoice.Status.PAID)
+
+    def test_billing_dashboard_view_and_filtering(self):
+        invoice = Invoice.objects.create(
+            appointment=self.appointment,
+            patient=self.patient,
+            total_amount=Decimal("200.00"),
+            status=Invoice.Status.ISSUED
+        )
+        self.client.force_login(self.receptionist)
+        
+        # Test basic view
+        response = self.client.get(reverse("billing-dashboard"))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, invoice.invoice_number)
+
+        # Test filtering by status
+        response = self.client.get(reverse("billing-dashboard") + "?status=PAID")
+        self.assertNotContains(response, invoice.invoice_number)
+
+        # Test filtering by search query
+        response = self.client.get(reverse("billing-dashboard") + "?q=Jane")
+        self.assertContains(response, invoice.invoice_number)
+

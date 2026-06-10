@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 import os
 
 from django.conf import settings
@@ -93,10 +94,7 @@ class CustomRegisterView(View):
 
                 email.attach_alternative(html_content, "text/html")
                 email.send()
-            messages.success(
-                request,
-                "Account created successfully. Please check your email to activate your account."
-            )
+            messages.success(request, _("Account created successfully. Please check your email to activate your account."))
             return redirect('login')
         return render(request, "accounts/register.html", {'form': form})
 
@@ -131,12 +129,9 @@ class CustomForgotPasswordView(View):
 
                 email.attach_alternative(html_content, "text/html")
                 email.send()
-                messages.success(
-                    request,
-                    "Password reset link sent. Please check your email."
-                )
+                messages.success(request, _("Password reset link sent. Please check your email."))
             except CustomUser.DoesNotExist:
-                messages.error(request, "No account found with that email.")
+                messages.error(request, _("No account found with that email."))
             return redirect('login')
         return render(request, "accounts/forgot_password.html", {'form': form})
 
@@ -144,17 +139,17 @@ class CustomResetPasswordView(View):
     def get(self, request, uid, token):
         user = VerificationService.verify(uid, token)
         if user:
-            messages.success(request, "Verification successful. Please enter your new password.")
+            messages.success(request, _("Verification successful. Please enter your new password."))
             form = ResetPasswordForm()
             return render(request, "accounts/reset_password.html", {'form': form, 'uid': uid, 'token': token})
         else:
-            messages.error(request, "Invalid or expired reset link.")
+            messages.error(request, _("Invalid or expired reset link."))
             return redirect('login')
 
     def post(self, request, uid, token):
         user = VerificationService.verify(uid, token)
         if not user:
-            messages.error(request, "Invalid or expired reset link.")
+            messages.error(request, _("Invalid or expired reset link."))
             return redirect('login')
 
         form = ResetPasswordForm(request.POST)
@@ -162,7 +157,7 @@ class CustomResetPasswordView(View):
             new_password = form.cleaned_data['new_password']
             user.set_password(new_password)
             user.save()
-            messages.success(request, "Password reset successful. You can now log in with your new password.")
+            messages.success(request, _("Password reset successful. You can now log in with your new password."))
             return redirect('login')
 
         return render(request, "accounts/reset_password.html", {'form': form, 'uid': uid, 'token': token})

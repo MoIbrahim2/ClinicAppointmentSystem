@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -159,18 +160,14 @@ class Appointment(models.Model):
             conflicts = conflicts.exclude(pk=self.pk)
 
         if conflicts.filter(slot_id=self.slot_id).exists():
-            raise ValidationError(
-                "This time slot is already booked for this doctor."
-            )
+            raise ValidationError(_("This time slot is already booked for this doctor."))
 
         if conflicts.filter(
             patient_id=self.patient_id,
             doctor_id=self.slot.doctor_id,
             slot__date=self.slot.date,
         ).exists():
-            raise ValidationError(
-                "You already have an active appointment with this doctor on this day."
-            )
+            raise ValidationError(_("You already have an active appointment with this doctor on this day."))
 
         overlapping = conflicts.filter(
             patient_id=self.patient_id,
@@ -181,9 +178,7 @@ class Appointment(models.Model):
         )
 
         if overlapping.exists():
-            raise ValidationError(
-                "You already have another active appointment that overlaps with this time."
-            )
+            raise ValidationError(_("You already have another active appointment that overlaps with this time."))
 
     def save(self, *args, **kwargs):
         if self.slot_id:

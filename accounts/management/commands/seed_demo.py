@@ -14,7 +14,7 @@ from appointments.models import Appointment, AppointmentSlot, DoctorSchedule
 from appointments.services import generate_slots
 from emr.models import Consultation, Prescription
 from notifications.models import Notification
-from payments.models import PaymentTransaction
+from payments.models import PaymentTransaction, Invoice, InvoicePayment
 from reception.models import WalkInPatient
 
 
@@ -206,6 +206,47 @@ class Command(BaseCommand):
             phone_number="01000000002",
             defaults={"notes": "First visit, no prior history."},
         )
+
+        # Seed invoices & payments for completed or checked-in appointments to show in the billing dashboard
+        for appt in Appointment.objects.filter(status__in=[Appointment.Status.COMPLETED, Appointment.Status.CHECKED_IN]):
+            # Get doctor fee
+            fee = Decimal("200.00")
+            if appt.doctor and hasattr(appt.doctor, 'doctor_profile') and appt.doctor.doctor_profile.consultation_fee:
+                fee = appt.doctor.doctor_profile.consultation_fee
+            
+            # Get or create invoice
+            invoice, created = Invoice.objects.get_or_create(
+                appointment=appt,
+                defaults={
+                    "patient": appt.patient,
+                    "total_amount": fee,
+                    "status": Invoice.Status.ISSUED,
+                    "notes": f"Seeded invoice for appointment on {appt.slot.date}",
+                }
+            )
+            
+            if created:
+                # For completed/checked in appointments, record some payments
+                if appt.status == Appointment.Status.COMPLETED:
+                    if appt.patient.username == "patient":
+                        # Make this one fully paid
+                        InvoicePayment.objects.create(
+                            invoice=invoice,
+                            amount=fee,
+                            payment_method=InvoicePayment.PaymentMethod.CASH,
+                            notes="Fully paid cash at counter",
+                            received_by=receptionist
+                        )
+                    elif appt.patient.username == "patient2":
+                        # Make this one partially paid
+                        part_amount = fee / Decimal("2.00")
+                        InvoicePayment.objects.create(
+                            invoice=invoice,
+                            amount=part_amount,
+                            payment_method=InvoicePayment.PaymentMethod.CARD,
+                            notes="Deposit paid",
+                            received_by=receptionist
+                        )
 
         # Notifications
         Notification.objects.get_or_create(

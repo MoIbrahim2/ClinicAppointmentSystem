@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
@@ -220,7 +221,7 @@ def cancel_appointment(request, appointment_id):
 
     form = AppointmentCancellationForm(request.POST)
     if not form.is_valid():
-        messages.error(request, "Please provide a cancellation reason.")
+        messages.error(request, _("Please provide a cancellation reason."))
         return redirect("my-appointments")
 
     try:
@@ -252,5 +253,5 @@ def cancel_appointment(request, appointment_id):
             f"has been sent back to your card.",
         )
     else:
-        messages.success(request, "Your appointment has been cancelled.")
+        messages.success(request, _("Your appointment has been cancelled."))
     return redirect("my-appointments")

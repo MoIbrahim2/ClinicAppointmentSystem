@@ -1,3 +1,4 @@
+from django.utils.translation import gettext_lazy as _
 from datetime import timedelta
 from decimal import Decimal
 
@@ -6,14 +7,24 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
+from django.db.models import Q
+from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views import View
 
 from appointments.models import Appointment, AppointmentSlot, RescheduleHistory
+from accounts.forms import BLOOD_TYPE_CHOICES
+from accounts.models import PatientProfile
 from payments.views import process_appointment_refund
 from .models import WalkInPatient
-from .forms import WalkInPatientForm, UpdateStatusForm, RescheduleForm
+from .forms import (
+    PatientEditForm,
+    PatientRegistrationForm,
+    RescheduleForm,
+    UpdateStatusForm,
+    WalkInPatientForm,
+)
 
 User = get_user_model()
 
@@ -25,6 +36,125 @@ class ReceptionistRequiredMixin:
         return super().dispatch(request, *args, **kwargs)
 
 
+class PatientListView(LoginRequiredMixin, ReceptionistRequiredMixin, View):
+    paginate_by = 25
+
+    def get(self, request):
+        patients = User.objects.filter(
+            role=User.Role.PATIENT,
+            patient_profile__isnull=False,
+        ).select_related("patient_profile").order_by("id")
+        search_query = (request.GET.get("q") or "").strip()
+        blood_type = (request.GET.get("blood_type") or "").strip()
+        gender = (request.GET.get("gender") or "").strip()
+
+        if search_query:
+            search_filter = (
+                Q(first_name__icontains=search_query)
+                | Q(last_name__icontains=search_query)
+                | Q(username__icontains=search_query)
+                | Q(email__icontains=search_query)
+                | Q(phone_number__icontains=search_query)
+            )
+            if search_query.isdigit():
+                search_filter |= Q(id=int(search_query))
+            patients = patients.filter(search_filter)
+
+        if blood_type:
+            patients = patients.filter(patient_profile__blood_type=blood_type)
+
+        if gender:
+            patients = patients.filter(patient_profile__gender=gender)
+
+        paginator = Paginator(patients, self.paginate_by)
+        page_obj = paginator.get_page(request.GET.get("page"))
+
+        return render(request, "reception/patient_list.html", {
+            "patients": page_obj,
+            "page_obj": page_obj,
+            "search_query": search_query,
+            "selected_blood_type": blood_type,
+            "selected_gender": gender,
+            "blood_type_choices": BLOOD_TYPE_CHOICES,
+            "gender_choices": PatientProfile._meta.get_field("gender").choices,
+            "current_section": "patients",
+        })
+
+
+class PatientCreateView(LoginRequiredMixin, ReceptionistRequiredMixin, View):
+    def get(self, request):
+        return render(request, "reception/patient_create.html", {
+            "form": PatientRegistrationForm(),
+            "current_section": "patients",
+        })
+
+    def post(self, request):
+        form = PatientRegistrationForm(request.POST)
+        if form.is_valid():
+            with transaction.atomic():
+                form.save()
+            messages.success(request, _("Patient record created successfully."))
+            return redirect("reception:patient-list")
+
+        messages.error(request, _("Could not create the patient record. Please check the form and try again."))
+        return render(request, "reception/patient_create.html", {
+            "form": form,
+            "current_section": "patients",
+        })
+
+
+class PatientEditView(LoginRequiredMixin, ReceptionistRequiredMixin, View):
+    def get_patient(self, pk):
+        return get_object_or_404(
+            User.objects.select_related("patient_profile"),
+            pk=pk,
+            role=User.Role.PATIENT,
+        )
+
+    def get(self, request, pk):
+        patient = self.get_patient(pk)
+        return render(request, "reception/patient_edit.html", {
+            "form": PatientEditForm(patient=patient),
+            "patient": patient,
+            "current_section": "patients",
+        })
+
+    def post(self, request, pk):
+        patient = self.get_patient(pk)
+        form = PatientEditForm(request.POST, patient=patient)
+        if form.is_valid():
+            with transaction.atomic():
+                form.save()
+            messages.success(request, _("Patient record updated successfully."))
+            return redirect("reception:patient-detail", pk=patient.pk)
+
+        messages.error(request, _("Could not update the patient record. Please check the form and try again."))
+        return render(request, "reception/patient_edit.html", {
+            "form": form,
+            "patient": patient,
+            "current_section": "patients",
+        })
+
+
+class PatientDetailView(LoginRequiredMixin, ReceptionistRequiredMixin, View):
+    def get(self, request, pk):
+        patient = get_object_or_404(
+            User.objects.select_related("patient_profile"),
+            pk=pk,
+            role=User.Role.PATIENT,
+        )
+        appointments = Appointment.objects.filter(patient=patient).select_related(
+            "doctor",
+            "slot",
+        ).order_by("-slot__date", "-slot__start_time")[:10]
+        return render(request, "reception/patient_detail.html", {
+            "patient": patient,
+            "profile": patient.patient_profile,
+            "appointments": appointments,
+            "current_section": "patients",
+        })
+
+
 class UpdateAppointmentStatusView(LoginRequiredMixin, ReceptionistRequiredMixin, View):
     def post(self, request, pk):
         appointment = get_object_or_404(Appointment, pk=pk)
@@ -34,7 +164,7 @@ class UpdateAppointmentStatusView(LoginRequiredMixin, ReceptionistRequiredMixin,
             new_status = form.cleaned_data['status']
             if new_status == Appointment.Status.COMPLETED:
                 if appointment.status != Appointment.Status.CHECKED_IN:
-                    messages.error(request, "Only checked‑in appointments can be marked as completed.")
+                    messages.error(request, _("Only checked‑in appointments can be marked as completed."))
                     return redirect('dashboard')
             
             if new_status == Appointment.Status.CANCELLED:
@@ -58,7 +188,7 @@ class UpdateAppointmentStatusView(LoginRequiredMixin, ReceptionistRequiredMixin,
                 appointment.status = new_status
                 appointment.save()
                 name = appointment.patient.get_full_name() or appointment.patient.username
-                messages.success(request, f"Status for {name} changed to {appointment.status}.")
+                messages.success(request, _("Status for {name} changed to {appointment.status}."))
 
         return redirect('dashboard')
 
@@ -80,10 +210,10 @@ class WalkInPatientCreateView(LoginRequiredMixin, ReceptionistRequiredMixin, Vie
             patient_user = self.get_or_create_walk_in_user(walk_in)
             self.create_walk_in_appointment(patient_user, doctor)
 
-            messages.success(request, f"Successfully registered {walk_in.name}!")
+            messages.success(request, _("Successfully registered {walk_in.name}!"))
             return redirect('dashboard')
 
-        messages.error(request, "Could not register the walk-in. Please check the data and try again.")
+        messages.error(request, _("Could not register the walk-in. Please check the data and try again."))
         return render(request, 'reception/walk_in.html', {
             'form': form,
             'current_section': 'walkin'
@@ -133,7 +263,7 @@ class RescheduleAppointmentView(LoginRequiredMixin, ReceptionistRequiredMixin, V
         appointment = get_object_or_404(Appointment, pk=pk)
 
         if appointment.status in [Appointment.Status.CANCELLED, Appointment.Status.COMPLETED]:
-            messages.error(request, "Completed or cancelled appointments cannot be rescheduled.")
+            messages.error(request, _("Completed or cancelled appointments cannot be rescheduled."))
             return redirect('dashboard')
 
         form = RescheduleForm(request.POST)
@@ -146,7 +276,7 @@ class RescheduleAppointmentView(LoginRequiredMixin, ReceptionistRequiredMixin, V
             old_slot = appointment.slot
 
             if old_slot.date == new_date and old_slot.start_time == new_start_time:
-                messages.info(request, "Please choose a different slot to reschedule.")
+                messages.info(request, _("Please choose a different slot to reschedule."))
                 return redirect('dashboard')
             
           
@@ -161,7 +291,7 @@ class RescheduleAppointmentView(LoginRequiredMixin, ReceptionistRequiredMixin, V
             )
             
             if not created and new_slot.is_booked:
-                messages.error(request, "The selected new slot is already booked.")
+                messages.error(request, _("The selected new slot is already booked."))
                 return redirect('dashboard')
 
             try:
@@ -184,7 +314,7 @@ class RescheduleAppointmentView(LoginRequiredMixin, ReceptionistRequiredMixin, V
                         reason=reason
                     )
 
-                messages.success(request, f"Successfully rescheduled appointment for {appointment.patient}.")
+                messages.success(request, _("Successfully rescheduled appointment for {appointment.patient}."))
             except ValidationError as exc:
                 if hasattr(exc, "message_dict"):
                     errors = []
@@ -195,9 +325,9 @@ class RescheduleAppointmentView(LoginRequiredMixin, ReceptionistRequiredMixin, V
                     message = exc.messages[0] if getattr(exc, "messages", None) else "Failed to reschedule due to validation rules."
                 messages.error(request, message)
             except IntegrityError:
-                messages.error(request, "Could not reschedule due to a conflicting appointment. Please choose another slot.")
+                messages.error(request, _("Could not reschedule due to a conflicting appointment. Please choose another slot."))
             
         else:
-            messages.error(request, "Failed to reschedule. Please check the form data.")
+            messages.error(request, _("Failed to reschedule. Please check the form data."))
             
         return redirect('dashboard')
