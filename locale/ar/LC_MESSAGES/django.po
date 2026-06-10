@@ -2307,13 +2307,13 @@ msgid "Dashboard"
 msgstr "لوحة القيادة"
 
 msgid "Home"
-msgstr "بيت"
+msgstr "الصفحة الرئيسية"
 
 msgid "© Clinic System"
 msgstr "© نظام العيادة"
 
 msgid "Same dashboard rhythm, right from sign in."
-msgstr "نفس إيقاع لوحة القيادة، مباشرة من تسجيل الدخول."
+msgstr "نفس إيقاع لوحة التحكم، مباشرة من تسجيل الدخول."
 
 msgid ""
 ""
